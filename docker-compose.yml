@@ -1,0 +1,26 @@
+# Sakhi backend (NestJS + Prisma/SQLite) in Docker.
+# Usage: `make docker-up`  (or `docker compose up -d --build`)
+services:
+  api:
+    build:
+      context: ./server
+    image: sakhi-server:latest
+    container_name: sakhi-api
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      DATABASE_URL: "file:/data/dev.db"
+      UPLOADS_DIR: "/data/uploads"
+      JWT_SECRET: "${JWT_SECRET:-sakhi-dev-secret-change-me}"
+      JWT_EXPIRES_IN: "${JWT_EXPIRES_IN:-7d}"
+      CORS_ORIGIN: "${CORS_ORIGIN:-*}"
+      # Seed demo data (meera@sakhi.app / password123) on first boot.
+      SEED_ON_START: "${SEED_ON_START:-true}"
+    volumes:
+      # Persist the SQLite db + uploaded evidence across restarts/rebuilds.
+      - sakhi-data:/data
+
+volumes:
+  sakhi-data:
