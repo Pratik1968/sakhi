@@ -10,7 +10,7 @@ const TABS: TabDef[] = [
 ];
 
 // Sub-screens live in the tab group so the tab bar stays visible (Tools active).
-const SUBSCREENS = ['ai', 'routes', 'zones', 'evidence', 'chatbot', 'nearby', 'report', 'fake', 'timeline'];
+const SUBSCREENS = ['ai', 'routes', 'zones', 'evidence', 'chatbot', 'nearby', 'report', 'fake', 'timeline', 'incident'];
 
 export default function TabsLayout() {
   const router = useRouter();

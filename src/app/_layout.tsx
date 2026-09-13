@@ -18,6 +18,8 @@ import {
   IBMPlexMono_600SemiBold,
 } from '@expo-google-fonts/ibm-plex-mono';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
+import { SettingsProvider } from '@/providers/SettingsProvider';
+import { useSosRealtime } from '@/hooks/useSosRealtime';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -27,6 +29,9 @@ function RootNavigator() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  // Guardian-side realtime SOS listener — opens the full-screen incoming alert.
+  useSosRealtime();
 
   useEffect(() => {
     if (loading) return;
@@ -44,6 +49,8 @@ function RootNavigator() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="sos" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
       <Stack.Screen name="ringing" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+      <Stack.Screen name="guardian-alert" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+      <Stack.Screen name="add-guardian" options={{ presentation: 'modal' }} />
       <Stack.Screen name="admin" />
     </Stack>
   );
@@ -71,8 +78,10 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <StatusBar style="dark" />
-            <RootNavigator />
+            <SettingsProvider>
+              <StatusBar style="dark" />
+              <RootNavigator />
+            </SettingsProvider>
           </AuthProvider>
         </QueryClientProvider>
       </SafeAreaProvider>

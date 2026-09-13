@@ -1,21 +1,42 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MapCanvas } from '@/components/app/MapCanvas';
-import { MapPin } from '@/components/app/MapPin';
+import { RiskZonesMap } from '@/components/app/RiskZonesMap';
 import { SubHeader } from '@/components/app/SubHeader';
-import { TileView } from '@/components/app/rows';
+import { MetaText, TileView } from '@/components/app/rows';
 import { ListRow } from '@/components/core/ListRow';
 import { SectionHeader } from '@/components/core/SectionHeader';
 import { SegmentedControl } from '@/components/core/SegmentedControl';
-import { StatusPill } from '@/components/core/StatusPill';
-import { legend, periodOptions, pins, zoneRows } from '@/data/sakhi';
+import { useCrimeIncidents } from '@/hooks/queries';
+import { shortDate } from '@/lib/format';
+import { weightedSeverity, type Period } from '@/lib/risk';
+import { legend, periodOptions, type Tile } from '@/data/sakhi';
 import { colors, figtree, radius, space } from '@/theme/tokens';
 import { cardShadow } from '@/theme/shadows';
 
+// Colour the leading tile by how severe the incident is.
+function severityTile(sev: number): Tile {
+  if (sev >= 4) return { icon: 'triangle-alert', bg: '#FFF0EE', fg: '#B92C22' };
+  if (sev >= 3) return { icon: 'triangle-alert', bg: '#FDF3E5', fg: '#D8861F' };
+  return { icon: 'map-pin', bg: '#F3F2F5', fg: '#3A383F' };
+}
+
 export default function ZonesScreen() {
   const insets = useSafeAreaInsets();
-  const [period, setPeriod] = useState('Now');
+  const [period, setPeriod] = useState<Period>('Now');
+  const { data: crime, isLoading } = useCrimeIncidents();
+
+  const rows = useMemo(
+    () =>
+      [...(crime ?? [])]
+        .sort(
+          (a, b) =>
+            weightedSeverity(b, period) - weightedSeverity(a, period) ||
+            b.severity - a.severity,
+        )
+        .slice(0, 10),
+    [crime, period],
+  );
 
   return (
     <View style={styles.screen}>
@@ -23,16 +44,20 @@ export default function ZonesScreen() {
         <SubHeader title="Risk zones" />
       </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SegmentedControl options={periodOptions} value={period} onChange={setPeriod} fullWidth />
+        <SegmentedControl
+          options={periodOptions}
+          value={period}
+          onChange={(v) => setPeriod(v as Period)}
+          fullWidth
+        />
 
-        <MapCanvas style={styles.map}>
-          <View style={[styles.blob, { left: '16%', top: '22%', width: 104, height: 88, backgroundColor: 'rgba(255,74,60,.28)', borderColor: 'rgba(255,74,60,.5)' }]} />
-          <View style={[styles.blob, { right: '14%', top: '46%', width: 88, height: 74, backgroundColor: 'rgba(242,163,60,.3)', borderColor: 'rgba(242,163,60,.55)' }]} />
-          <View style={[styles.blob, { left: '34%', bottom: '12%', width: 96, height: 66, backgroundColor: 'rgba(23,168,110,.24)', borderColor: 'rgba(23,168,110,.5)' }]} />
-          {pins.zone.map((p) => (
-            <MapPin key={p.name} {...p} />
-          ))}
-        </MapCanvas>
+        <RiskZonesMap incidents={crime ?? []} period={period} style={styles.map}>
+          {crime && crime.length > 0 ? (
+            <View style={styles.countPill}>
+              <Text style={styles.countText}>{crime.length} incidents mapped</Text>
+            </View>
+          ) : null}
+        </RiskZonesMap>
 
         <View style={styles.legend}>
           {legend.map((l) => (
@@ -46,17 +71,25 @@ export default function ZonesScreen() {
         <View>
           <SectionHeader title="Around you" meta={period} />
           <View style={styles.card}>
-            {zoneRows.map((z, i) => (
-              <ListRow
-                key={z.title}
-                divider={i < zoneRows.length - 1}
-                chevron={false}
-                leading={<TileView tile={z.tile} />}
-                title={z.title}
-                subtitle={z.sub}
-                trailing={<StatusPill tone={z.pillTone} label={z.pillLabel} filled />}
-              />
-            ))}
+            {isLoading ? (
+              <ListRow chevron={false} divider={false} title="Loading risk data…" />
+            ) : rows.length === 0 ? (
+              <ListRow chevron={false} divider={false} title="No risk data for your area yet." />
+            ) : (
+              rows.map((z, i) => (
+                <ListRow
+                  key={z.id}
+                  divider={i < rows.length - 1}
+                  chevron={false}
+                  leading={<TileView tile={severityTile(weightedSeverity(z, period))} />}
+                  title={z.locality}
+                  subtitle={`${z.crimeType} · severity ${z.severity}`}
+                  trailing={
+                    z.incidentDate ? <MetaText>{shortDate(new Date(z.incidentDate))}</MetaText> : undefined
+                  }
+                />
+              ))
+            )}
           </View>
         </View>
 
@@ -73,7 +106,16 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ink050 },
   content: { padding: 20, paddingTop: 12, paddingBottom: 28, gap: 20 },
   map: { height: 200, borderRadius: 18, ...cardShadow },
-  blob: { position: 'absolute', borderRadius: 999, borderWidth: 1 },
+  countPill: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+    backgroundColor: 'rgba(255,255,255,.9)',
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  countText: { fontFamily: figtree(700), fontSize: 13, color: colors.ink900 },
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   legendDot: { width: 10, height: 10, borderRadius: 5 },

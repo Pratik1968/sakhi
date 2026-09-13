@@ -9,20 +9,23 @@ import { ListRow } from '@/components/core/ListRow';
 import { SectionHeader } from '@/components/core/SectionHeader';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/providers/AuthProvider';
-import { account, triggers } from '@/data/sakhi';
+import { useGuardians } from '@/hooks/queries';
+import { triggers } from '@/data/sakhi';
 import { colors, radius, space } from '@/theme/tokens';
 import { cardShadow } from '@/theme/shadows';
 
 export default function YouScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
+  const { data: guardians } = useGuardians();
+  const guardianCount = guardians?.length ?? 0;
   const [on, setOn] = useState<boolean[]>(triggers.map((t) => !!t.trailSwitch));
 
   return (
     <View style={styles.screen}>
       <View style={{ paddingTop: insets.top, backgroundColor: colors.white }}>
-        <AppHeader title="You" eyebrow="Meera Rajan · O+" />
+        <AppHeader title="You" eyebrow={user?.name ?? 'You'} />
       </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View>
@@ -52,15 +55,18 @@ export default function YouScreen() {
         <View>
           <SectionHeader title="Account" />
           <View style={styles.card}>
-            {account.map((a, i) => (
-              <ListRow
-                key={a.title}
-                divider={i < account.length - 1}
-                leading={<LeadView lead={a.lead} />}
-                title={a.title}
-                subtitle={a.sub}
-              />
-            ))}
+            <ListRow
+              divider
+              leading={<LeadView lead={{ type: 'avatar', name: user?.name ?? 'You', tone: 'lilac' }} />}
+              title="Email"
+              subtitle={user?.email ?? 'Not signed in'}
+            />
+            <ListRow
+              divider={false}
+              leading={<LeadView lead={{ type: 'tile', tile: { icon: 'users', bg: colors.lilac050, fg: colors.lilac600 } }} />}
+              title="Guardians"
+              subtitle={`${guardianCount} in your circle`}
+            />
           </View>
         </View>
 

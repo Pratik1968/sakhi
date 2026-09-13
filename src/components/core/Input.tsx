@@ -1,23 +1,24 @@
+import { forwardRef } from 'react';
 import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
 import { colors, figtree, radius, space } from '@/theme/tokens';
 import { Icon, IconName } from './Icon';
 
 // The design's labeled field: uppercase label, optional leading icon, value text.
-export function Input({
-  label,
-  icon,
-  value,
-  editable = false,
-  onChangeText,
-  placeholder,
-  ...rest
-}: TextInputProps & { label?: string; icon?: IconName; value?: string }) {
+// A trailing slot (e.g. a clear button) can be passed via `trailing`.
+export const Input = forwardRef<
+  TextInput,
+  TextInputProps & { label?: string; icon?: IconName; value?: string; trailing?: React.ReactNode }
+>(function Input(
+  { label, icon, value, editable = false, onChangeText, placeholder, trailing, ...rest },
+  ref,
+) {
   return (
     <View style={styles.wrap}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <View style={styles.field}>
         {icon ? <Icon name={icon} size={20} color={colors.ink500} /> : null}
         <TextInput
+          ref={ref}
           value={value}
           editable={editable}
           onChangeText={onChangeText}
@@ -26,10 +27,11 @@ export function Input({
           style={styles.input}
           {...rest}
         />
+        {trailing}
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   wrap: { gap: 8 },

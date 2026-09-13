@@ -4,12 +4,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppHeader } from '@/components/app/AppHeader';
 import { Icon } from '@/components/core/Icon';
 import { tools } from '@/data/sakhi';
+import { useIncidents } from '@/hooks/queries';
+import { shortDate } from '@/lib/format';
 import { colors, figtree } from '@/theme/tokens';
 import { cardShadow } from '@/theme/shadows';
 
 export default function ToolsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { data: incidents } = useIncidents();
+  const lastReport = incidents?.slice().sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))[0];
+  const timelineSub = lastReport
+    ? `Last report · ${shortDate(new Date(lastReport.createdAt))}`
+    : 'No reports yet';
 
   return (
     <View style={styles.screen}>
@@ -28,7 +35,7 @@ export default function ToolsScreen() {
                 <Icon name={t.icon} size={20} color={t.fg} />
               </View>
               <Text style={styles.title}>{t.title}</Text>
-              <Text style={styles.sub}>{t.sub}</Text>
+              <Text style={styles.sub}>{t.key === 'timeline' ? timelineSub : t.sub}</Text>
             </Pressable>
           ))}
         </View>

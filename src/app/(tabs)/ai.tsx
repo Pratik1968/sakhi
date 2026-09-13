@@ -3,12 +3,11 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SubHeader } from '@/components/app/SubHeader';
 import { TileView } from '@/components/app/rows';
-import { TimelineItem } from '@/components/app/TimelineItem';
 import { ListRow } from '@/components/core/ListRow';
 import { SectionHeader } from '@/components/core/SectionHeader';
 import { SegmentedControl } from '@/components/core/SegmentedControl';
 import { StatusPill } from '@/components/core/StatusPill';
-import { detections, sensNote, sensOptions, signals } from '@/data/sakhi';
+import { sensNote, sensOptions, signals } from '@/data/sakhi';
 import { colors, figtree, radius, space } from '@/theme/tokens';
 import { cardShadow } from '@/theme/shadows';
 
@@ -27,7 +26,7 @@ export default function AiScreen() {
             <View style={styles.dot} />
             <Text style={styles.heroEyebrow}>On-device · listening</Text>
           </View>
-          <Text style={styles.heroTitle}>Nothing unusual in the last 12 minutes.</Text>
+          <Text style={styles.heroTitle}>Nothing unusual right now.</Text>
           <Text style={styles.heroSub}>
             Motion, route, audio and vitals models run together. Only a match leaves your phone.
           </Text>
@@ -57,11 +56,10 @@ export default function AiScreen() {
         </View>
 
         <View>
-          <SectionHeader title="Recent detections" meta="Today" />
-          <View style={styles.timeline}>
-            {detections.map((d, i) => (
-              <TimelineItem key={i} {...d} last={i === detections.length - 1} />
-            ))}
+          <SectionHeader title="Recent detections" />
+          <View style={styles.empty}>
+            <Text style={styles.emptyTitle}>No detections yet</Text>
+            <Text style={styles.emptySub}>On-device monitoring is active — nothing unusual to report.</Text>
           </View>
         </View>
       </ScrollView>
@@ -80,5 +78,7 @@ const styles = StyleSheet.create({
   heroSub: { fontFamily: figtree(400), fontSize: 14, color: colors.ink300, lineHeight: 20 },
   note: { fontFamily: figtree(400), fontSize: 14, color: colors.ink500, marginTop: 10 },
   card: { backgroundColor: colors.white, borderRadius: radius.card, paddingHorizontal: space.cardPadding, ...cardShadow },
-  timeline: { backgroundColor: colors.white, borderRadius: radius.card, padding: 16, ...cardShadow },
+  empty: { backgroundColor: colors.white, borderRadius: radius.card, padding: 28, alignItems: 'center', gap: 6, ...cardShadow },
+  emptyTitle: { fontFamily: figtree(700), fontSize: 16, color: colors.ink900, textAlign: 'center' },
+  emptySub: { fontFamily: figtree(400), fontSize: 14, color: colors.ink500, textAlign: 'center', lineHeight: 20 },
 });

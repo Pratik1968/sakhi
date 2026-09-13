@@ -1,26 +1,27 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { MapCanvas } from '@/components/app/MapCanvas';
-import { MapPin } from '@/components/app/MapPin';
-import { TimelineItem } from '@/components/app/TimelineItem';
-import { Avatar } from '@/components/core/Avatar';
 import { Button } from '@/components/core/Button';
 import { Icon } from '@/components/core/Icon';
 import { IconButton } from '@/components/core/IconButton';
-import { StatusPill } from '@/components/core/StatusPill';
-import { Badge } from '@/components/core/Badge';
-import {
-  adminEvidence,
-  adminGuardians,
-  adminIncidents,
-  adminTl,
-  hourBars,
-  kpis,
-  navItems,
-} from '@/data/admin';
+import { navItems } from '@/data/admin';
 import { colors, figtree } from '@/theme/tokens';
 import { cardShadow } from '@/theme/shadows';
+
+// No control-room backend is connected, so every data surface renders an
+// honest empty state instead of fabricated metrics, names, or incidents.
+const NO_DATA = 'No data — control-room backend not connected.';
+
+const kpiLabels = ['Open SOS', 'Median response', 'Protected users', 'Reports tonight'];
+
+function EmptyState({ text = NO_DATA }: { text?: string }) {
+  return (
+    <View style={styles.empty}>
+      <Icon name="info" size={22} color={colors.ink400} />
+      <Text style={styles.emptyText}>{text}</Text>
+    </View>
+  );
+}
 
 export default function AdminScreen() {
   const router = useRouter();
@@ -61,19 +62,19 @@ export default function AdminScreen() {
 
       {/* Main */}
       <ScrollView style={styles.main} contentContainerStyle={{ padding: 28 }}>
-        {view === 'overview' ? <Overview onOpen={() => setView('incident')} /> : <Incident onBack={() => setView('overview')} />}
+        {view === 'overview' ? <Overview /> : <Incident onBack={() => setView('overview')} />}
       </ScrollView>
     </View>
   );
 }
 
-function Overview({ onOpen }: { onOpen: () => void }) {
+function Overview() {
   return (
     <View style={{ gap: 22 }}>
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.h1}>Live operations</Text>
-          <Text style={styles.h1sub}>Bengaluru city · Tuesday 10 Feb, 21:38</Text>
+          <Text style={styles.h1}>Control room</Text>
+          <Text style={styles.h1sub}>{new Date().toLocaleString()}</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <Button variant="secondary" icon="share">Export shift report</Button>
@@ -82,11 +83,11 @@ function Overview({ onOpen }: { onOpen: () => void }) {
       </View>
 
       <View style={styles.kpiRow}>
-        {kpis.map((k) => (
-          <View key={k.label} style={styles.kpi}>
-            <Text style={styles.kpiLabel}>{k.label}</Text>
-            <Text style={[styles.kpiValue, { color: k.color }]}>{k.value}</Text>
-            <Text style={styles.kpiNote}>{k.note}</Text>
+        {kpiLabels.map((label) => (
+          <View key={label} style={styles.kpi}>
+            <Text style={styles.kpiLabel}>{label}</Text>
+            <Text style={[styles.kpiValue, { color: colors.ink900 }]}>—</Text>
+            <Text style={styles.kpiNote}>No data yet</Text>
           </View>
         ))}
       </View>
@@ -95,53 +96,18 @@ function Overview({ onOpen }: { onOpen: () => void }) {
         <View style={[styles.panel, { flex: 1.35 }]}>
           <View style={styles.panelHead}>
             <Text style={styles.panelTitle}>Open incidents</Text>
-            <StatusPill tone="alert" label="3 need a responder" filled />
           </View>
-          <View style={styles.tableHead}>
-            <Text style={[styles.th, { flex: 1.1 }]}>User</Text>
-            <Text style={[styles.th, { flex: 1 }]}>Signal</Text>
-            <Text style={[styles.th, { flex: 0.9 }]}>Location</Text>
-            <Text style={[styles.th, { flex: 0.8 }]}>Status</Text>
-          </View>
-          {adminIncidents.map((i) => (
-            <Pressable key={i.id} onPress={onOpen} style={styles.tr}>
-              <View style={{ flex: 1.1 }}>
-                <Text style={styles.trUser}>{i.user}</Text>
-                <Text style={styles.trMeta}>{i.id} · {i.time}</Text>
-              </View>
-              <Text style={[styles.trCell, { flex: 1 }]}>{i.signal}</Text>
-              <Text style={[styles.trCell, { flex: 0.9, color: colors.ink600 }]}>{i.place}</Text>
-              <View style={{ flex: 0.8 }}>
-                <View style={[styles.statusChip, { backgroundColor: i.bg }]}>
-                  <Text style={[styles.statusText, { color: i.fg }]}>{i.status}</Text>
-                </View>
-              </View>
-            </Pressable>
-          ))}
+          <EmptyState />
         </View>
 
         <View style={{ flex: 1, gap: 14 }}>
           <View style={styles.panel}>
-            <Text style={[styles.panelTitle, { marginBottom: 12 }]}>Crime hotspots · tonight</Text>
-            <MapCanvas style={styles.adminMap}>
-              <View style={[styles.hotBlob, { left: '18%', top: '24%', width: 96, height: 80, backgroundColor: 'rgba(255,74,60,.32)', borderColor: 'rgba(255,74,60,.55)' }]} />
-              <View style={[styles.hotBlob, { right: '16%', top: '18%', width: 74, height: 64, backgroundColor: 'rgba(242,163,60,.32)', borderColor: 'rgba(242,163,60,.55)' }]} />
-              <MapPin name="SOS" tone="coral" size={38} left="26%" top="34%" />
-              <MapPin name="SOS" tone="coral" size={38} left="58%" top="62%" />
-            </MapCanvas>
+            <Text style={[styles.panelTitle, { marginBottom: 12 }]}>Crime hotspots</Text>
+            <EmptyState />
           </View>
           <View style={styles.panel}>
             <Text style={[styles.panelTitle, { marginBottom: 14 }]}>Alerts by hour</Text>
-            <View style={styles.bars}>
-              {hourBars.map((b) => (
-                <View key={b.label} style={styles.barCol}>
-                  <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-                    <View style={{ height: `${b.h}%`, backgroundColor: b.hot ? colors.coral500 : colors.ink200, borderRadius: 6 }} />
-                  </View>
-                  <Text style={styles.barLabel}>{b.label}</Text>
-                </View>
-              ))}
-            </View>
+            <EmptyState />
           </View>
         </View>
       </View>
@@ -156,13 +122,9 @@ function Incident({ onBack }: { onBack: () => void }) {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <IconButton icon="chevron-left" variant="solid" onPress={onBack} />
           <View>
-            <Text style={styles.h2}>Incident SK-4471</Text>
-            <Text style={styles.h1sub}>SOS · voice phrase “help me” · 21:31</Text>
+            <Text style={styles.h2}>Incident detail</Text>
+            <Text style={styles.h1sub}>No incident selected</Text>
           </View>
-        </View>
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Button variant="secondary" icon="phone">Call user</Button>
-          <Button variant="primary" icon="navigation">Dispatch patrol 12</Button>
         </View>
       </View>
 
@@ -170,53 +132,22 @@ function Incident({ onBack }: { onBack: () => void }) {
         <View style={{ flex: 1, gap: 14 }}>
           <View style={styles.panel}>
             <Text style={[styles.panelTitle, { marginBottom: 14 }]}>Live position</Text>
-            <MapCanvas route style={styles.adminMap}>
-              <MapPin name="A K" tone="coral" size={48} label="Anjali K" left="42%" top="46%" />
-              <MapPin name="P12" tone="ink" size={40} label="Patrol 12" left="68%" top="24%" />
-            </MapCanvas>
-            <View style={styles.badgeRow}>
-              <Badge tone="alert">Moving · 6 km/h</Badge>
-              <Badge tone="neutral">GPS ±4 m</Badge>
-              <Badge tone="caution">Battery 22%</Badge>
-            </View>
+            <EmptyState />
           </View>
           <View style={styles.panel}>
             <Text style={[styles.panelTitle, { marginBottom: 14 }]}>Sealed evidence</Text>
-            <View style={styles.evRow}>
-              {adminEvidence.map((e) => (
-                <View key={e.label} style={styles.evTile}>
-                  <Icon name={e.icon} size={22} color={colors.ink600} />
-                  <Text style={styles.evLabel}>{e.label}</Text>
-                  <Text style={styles.evMeta}>{e.meta}</Text>
-                </View>
-              ))}
-            </View>
-            <View style={styles.lockRow}>
-              <Icon name="lock" size={16} color={colors.ink500} />
-              <Text style={styles.lockText}>Opening a file writes an audit entry and notifies the user.</Text>
-            </View>
+            <EmptyState />
           </View>
         </View>
 
         <View style={{ flex: 1.15, gap: 14 }}>
           <View style={styles.panel}>
             <Text style={[styles.panelTitle, { marginBottom: 14 }]}>Timeline</Text>
-            {adminTl.map((t, i) => (
-              <TimelineItem key={i} {...t} last={i === adminTl.length - 1} />
-            ))}
+            <EmptyState />
           </View>
           <View style={styles.panel}>
             <Text style={[styles.panelTitle, { marginBottom: 12 }]}>Guardians reached</Text>
-            {adminGuardians.map((g, i) => (
-              <View key={g.title} style={[styles.gRow, i < adminGuardians.length - 1 && styles.gDivider]}>
-                <Avatar name={g.title} tone={g.tone} size="md" />
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={styles.gTitle}>{g.title}</Text>
-                  <Text style={styles.gSub}>{g.sub}</Text>
-                </View>
-                <StatusPill tone={g.pillTone} label={g.pill} filled />
-              </View>
-            ))}
+            <EmptyState />
           </View>
         </View>
       </View>
@@ -258,6 +189,8 @@ const styles = StyleSheet.create({
   panel: { backgroundColor: colors.white, borderRadius: 18, padding: 18, minWidth: 320, ...cardShadow },
   panelHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   panelTitle: { fontFamily: figtree(800), fontSize: 21, letterSpacing: -0.024 * 21, color: colors.ink900 },
+  empty: { alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 28 },
+  emptyText: { fontFamily: figtree(500), fontSize: 14, color: colors.ink500, textAlign: 'center' },
 
   tableHead: { flexDirection: 'row', gap: 8, paddingHorizontal: 8, paddingBottom: 10 },
   th: { fontFamily: figtree(700), fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', color: colors.ink400 },

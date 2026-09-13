@@ -2,37 +2,65 @@ import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SubHeader } from '@/components/app/SubHeader';
-import { StatCard } from '@/components/app/StatCard';
-import { TimelineItem } from '@/components/app/TimelineItem';
-import { Button } from '@/components/core/Button';
-import { bars3, incidentTl } from '@/data/sakhi';
+import { ListRow } from '@/components/core/ListRow';
+import { MetaText, TileView } from '@/components/app/rows';
+import { useIncidents } from '@/hooks/queries';
+import type { Incident } from '@/lib/types';
+import { humanizeType, incidentTile } from '@/lib/incidents';
+import { shortDate } from '@/lib/format';
 import { colors, radius } from '@/theme/tokens';
 import { cardShadow } from '@/theme/shadows';
+
+function coordsLabel(inc: Incident): string | undefined {
+  if (inc.lat == null || inc.lng == null) return undefined;
+  return `${inc.lat.toFixed(4)}, ${inc.lng.toFixed(4)}`;
+}
+
+function subtitleFor(inc: Incident): string {
+  const parts = [inc.area, inc.description].filter(Boolean) as string[];
+  if (parts.length) return parts.join(' · ');
+  return coordsLabel(inc) ?? 'No details';
+}
 
 export default function TimelineScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { data } = useIncidents();
+
+  const incidents = (data ?? [])
+    .slice()
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
     <View style={styles.screen}>
       <View style={{ paddingTop: insets.top }}>
-        <SubHeader title="SOS · 9 Feb" subtitle="Resolved · 4 min 12 s" />
+        <SubHeader title="Incident history" subtitle="Reports you've submitted" />
       </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.stats}>
-          <StatCard title="Response" label="FIRST REPLY" value="38" unit="sec" tone="safe" bars={bars3} />
-          <StatCard title="Evidence" label="CAPTURED" value="3" unit="files" tone="neutral" />
+        <View style={styles.card}>
+          {incidents.length === 0 ? (
+            <ListRow
+              divider={false}
+              chevron={false}
+              leading={<TileView tile={{ icon: 'clock', bg: colors.ink050, fg: colors.ink500 }} />}
+              title="No reports yet"
+              subtitle="Reports you submit will appear here."
+            />
+          ) : (
+            incidents.map((inc, i) => (
+              <ListRow
+                key={inc.id}
+                divider={i < incidents.length - 1}
+                chevron={false}
+                onPress={() => router.navigate(`/incident?id=${inc.id}` as never)}
+                leading={<TileView tile={incidentTile(inc.type)} />}
+                title={humanizeType(inc.type)}
+                subtitle={subtitleFor(inc)}
+                trailing={<MetaText>{shortDate(new Date(inc.createdAt))}</MetaText>}
+              />
+            ))
+          )}
         </View>
-
-        <View style={styles.timeline}>
-          {incidentTl.map((t, i) => (
-            <TimelineItem key={i} {...t} last={i === incidentTl.length - 1} />
-          ))}
-        </View>
-
-        <Button variant="secondary" size="lg" icon="lock" fullWidth onPress={() => router.navigate('/evidence')}>
-          Open sealed evidence
-        </Button>
       </ScrollView>
     </View>
   );
@@ -41,6 +69,5 @@ export default function TimelineScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ink050 },
   content: { padding: 20, paddingTop: 12, paddingBottom: 28, gap: 20 },
-  stats: { flexDirection: 'row', gap: 12 },
-  timeline: { backgroundColor: colors.white, borderRadius: radius.card, padding: 16, ...cardShadow },
+  card: { backgroundColor: colors.white, borderRadius: radius.card, paddingHorizontal: 16, ...cardShadow },
 });

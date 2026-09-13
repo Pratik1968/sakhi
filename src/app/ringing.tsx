@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +10,8 @@ import { colors, figtree } from '@/theme/tokens';
 export default function RingingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { caller } = useLocalSearchParams<{ caller?: string }>();
+  const name = caller || 'Incoming call';
 
   const blink = useSharedValue(1);
   useEffect(() => {
@@ -23,8 +25,8 @@ export default function RingingScreen() {
     <View style={[styles.screen, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 60 }]}>
       <View style={styles.top}>
         <Text style={styles.incoming}>incoming call</Text>
-        <Avatar name="Appa" size="xl" tone="lilac" ring />
-        <Text style={styles.name}>Appa</Text>
+        <Avatar name={name} size="xl" tone="lilac" ring />
+        <Text style={styles.name}>{name}</Text>
         <Animated.Text style={[styles.calling, blinkStyle]}>mobile · calling…</Animated.Text>
       </View>
 

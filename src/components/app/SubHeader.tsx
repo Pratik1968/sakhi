@@ -1,10 +1,22 @@
+import type { ReactNode } from 'react';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { IconButton } from '@/components/core/IconButton';
 import { colors, figtree } from '@/theme/tokens';
 
-// Sub-screen header from the design: plain back chevron + 24px title (+ optional subtitle).
-export function SubHeader({ title, subtitle, onBack }: { title: string; subtitle?: string; onBack?: () => void }) {
+// Sub-screen header from the design: plain back chevron + 24px title (+ optional
+// subtitle). An optional `action` node is rendered on the right.
+export function SubHeader({
+  title,
+  subtitle,
+  onBack,
+  action,
+}: {
+  title: string;
+  subtitle?: string;
+  onBack?: () => void;
+  action?: ReactNode;
+}) {
   const router = useRouter();
   const back = onBack ?? (() => (router.canGoBack() ? router.back() : router.navigate('/tools')));
   return (
@@ -16,6 +28,7 @@ export function SubHeader({ title, subtitle, onBack }: { title: string; subtitle
         </Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
+      {action}
     </View>
   );
 }

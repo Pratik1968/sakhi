@@ -7,12 +7,31 @@ import { Icon } from '@/components/core/Icon';
 import { ListRow } from '@/components/core/ListRow';
 import { SectionHeader } from '@/components/core/SectionHeader';
 import { StatusPill } from '@/components/core/StatusPill';
-import { files } from '@/data/sakhi';
+import type { Tile } from '@/data/sakhi';
+import { useEvidence, type Evidence } from '@/hooks/queries';
+import { timeAgo } from '@/lib/format';
 import { colors, figtree, radius, space } from '@/theme/tokens';
 import { cardShadow } from '@/theme/shadows';
 
+// Only kind + time are real. Map each evidence kind to an honest title and tile.
+function kindDisplay(kind: string): { title: string; tile: Tile } {
+  switch (kind) {
+    case 'AUDIO':
+      return { title: 'Audio', tile: { icon: 'mic', bg: colors.lilac050, fg: colors.lilac600 } };
+    case 'VIDEO':
+      return { title: 'Video', tile: { icon: 'video', bg: colors.ink050, fg: colors.ink700 } };
+    case 'IMAGE':
+      return { title: 'Image', tile: { icon: 'eye', bg: colors.moss050, fg: colors.moss600 } };
+    default:
+      return { title: kind, tile: { icon: 'lock', bg: colors.ink050, fg: colors.ink700 } };
+  }
+}
+
 export default function EvidenceScreen() {
   const insets = useSafeAreaInsets();
+  const { data: evidence } = useEvidence();
+  const items: Evidence[] = evidence ?? [];
+  const count = items.length;
 
   return (
     <View style={styles.screen}>
@@ -46,19 +65,32 @@ export default function EvidenceScreen() {
         </View>
 
         <View>
-          <SectionHeader title="Stored files" meta="4 items" />
+          <SectionHeader title="Stored files" meta={`${count} item${count === 1 ? '' : 's'}`} />
           <View style={styles.card}>
-            {files.map((f, i) => (
+            {count === 0 ? (
               <ListRow
-                key={f.title}
-                divider={i < files.length - 1}
+                divider={false}
                 chevron={false}
-                leading={<TileView tile={f.tile} />}
-                title={f.title}
-                subtitle={f.sub}
-                trailing={<MetaText>{f.meta}</MetaText>}
+                leading={<TileView tile={{ icon: 'lock', bg: colors.ink050, fg: colors.ink500 }} />}
+                title="No evidence captured yet"
+                subtitle="Recordings from an SOS will appear here."
               />
-            ))}
+            ) : (
+              items.map((f, i) => {
+                const d = kindDisplay(f.kind);
+                return (
+                  <ListRow
+                    key={f.id}
+                    divider={i < items.length - 1}
+                    chevron={false}
+                    leading={<TileView tile={d.tile} />}
+                    title={d.title}
+                    subtitle={timeAgo(f.createdAt)}
+                    trailing={<MetaText>{d.title}</MetaText>}
+                  />
+                );
+              })
+            )}
           </View>
         </View>
 
