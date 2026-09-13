@@ -1,7 +1,9 @@
 # Sakhi backend (NestJS)
 
-REST + Socket.IO API for the Sakhi women's-safety app. SQLite via Prisma for
-local development (swap `DATABASE_URL` for Postgres in production).
+REST + Socket.IO API for the Sakhi women's-safety app. **Postgres via Prisma**
+(runs as the `db` service in docker-compose). Includes a **safe-route planner**
+that ranks OSRM walking routes by crime-news exposure — see
+[`osrm/README.md`](./osrm/README.md) to self-host the router.
 
 ## Setup
 
@@ -16,9 +18,16 @@ make docker-down    # stop
 make docker-reset   # wipe the volume (db + uploads) and start fresh
 ```
 
-Or without make: `docker compose up -d --build`. The SQLite database and uploaded
-evidence live on the named volume `sakhi-data`, so they survive restarts and rebuilds.
-Demo login after first boot: `meera@sakhi.app` / `password123`.
+Or without make: `docker compose up -d --build`. This starts Postgres (`db`),
+the API, and OSRM. Postgres data lives on the `sakhi-pgdata` volume and uploaded
+evidence on `sakhi-data`, so both survive restarts and rebuilds. On first boot the
+API migrates the schema and seeds crime incidents. No demo users are seeded —
+register an account in the app to sign in.
+
+> **OSRM first:** the safe-route planner needs the walking graph. Build it once
+> with `make osrm-build` (or `cd server/osrm && ./build.sh`) before the `osrm`
+> service can serve routes. Until then, the planner falls back to the public OSRM
+> demo (car profile).
 
 Override secrets via env when starting, e.g.:
 `JWT_SECRET=... CORS_ORIGIN=https://example.com make docker-up`.
@@ -31,10 +40,10 @@ client, migrates, seeds), then `make server-dev`. Or manually:
 ```bash
 cd server
 npm install
-cp .env.example .env            # adjust JWT_SECRET / PORT if needed
+cp .env.example .env            # point DATABASE_URL at your Postgres; set OSRM_URL
 npm run prisma:generate         # generate the Prisma client
-npm run prisma:migrate          # create the SQLite schema
-npm run db:seed                 # optional demo data (meera@sakhi.app / password123)
+npm run prisma:migrate          # create the Postgres schema
+npm run db:seed                 # demo users + crime incidents (from prisma/data/*.csv)
 npm run start:dev               # http://localhost:4000/api
 ```
 
@@ -64,6 +73,8 @@ All other routes require `Authorization: Bearer <token>`.
 |            | `GET /api/sos` · `GET /api/sos/feed`         | My history · guardees' active SOS |
 | Incidents  | `POST/GET /api/incidents`, `GET .../nearby`  | Report / list / community map |
 | Evidence   | `POST /api/evidence` (multipart `file`)      | Upload; served at `/uploads/*` |
+| Routes     | `POST /api/routes/plan`                      | Safe route: OSRM alts ranked by crime exposure |
+|            | `GET /api/routes/incidents`                  | Crime incidents feeding the planner (risk zones) |
 
 ## Realtime (Socket.IO)
 

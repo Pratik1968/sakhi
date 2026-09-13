@@ -8,7 +8,14 @@ export class IncidentsService {
 
   create(userId: string, dto: CreateIncidentDto) {
     return this.prisma.incident.create({
-      data: { userId, type: dto.type, note: dto.note, lat: dto.lat, lng: dto.lng },
+      data: {
+        userId,
+        type: dto.type,
+        area: dto.area,
+        description: dto.description,
+        lat: dto.lat,
+        lng: dto.lng,
+      },
     });
   }
 

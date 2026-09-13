@@ -32,13 +32,21 @@ export class LocationService {
   }
 
   /**
-   * Latest known location for a user. Allowed for the user themselves or an
-   * active guardian of that user.
+   * Latest known location for a user. Allowed for the user themselves, an active
+   * guardian of that user, or the owner reading one of their own active
+   * guardians' locations (mutual visibility within a circle).
    */
   async latest(requesterId: string, targetUserId: string) {
     if (requesterId !== targetUserId) {
-      const guardianIds = await this.guardians.getGuardianUserIds(targetUserId, true);
-      if (!guardianIds.includes(requesterId)) {
+      // requester is a guardian of target (guardian → owner direction)
+      const requesterGuardsTarget = (
+        await this.guardians.getGuardianUserIds(targetUserId, true)
+      ).includes(requesterId);
+      // target is an active guardian of requester (owner → guardian direction)
+      const targetGuardsRequester = (
+        await this.guardians.getGuardianUserIds(requesterId, false)
+      ).includes(targetUserId);
+      if (!requesterGuardsTarget && !targetGuardsRequester) {
         throw new ForbiddenException('Not permitted to view this location');
       }
     }

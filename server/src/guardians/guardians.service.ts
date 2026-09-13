@@ -1,10 +1,14 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { InviteGuardianDto, UpdateGuardianDto } from './dto/invite-guardian.dto';
 
 @Injectable()
 export class GuardiansService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   /** Guardians the owner has added to their circle. */
   async list(ownerId: string) {
@@ -24,20 +28,54 @@ export class GuardiansService {
     });
   }
 
-  async invite(ownerId: string, dto: InviteGuardianDto) {
-    // If the invitee already has an account, link them immediately.
+  /**
+   * Whether the given email/phone already belongs to a Sakhi user. Used by the
+   * add-guardian flow to tell the owner, before inviting, whether the contact
+   * will receive an in-app request to accept (existing account) or can't be
+   * reached yet (no account). Either way the invite starts PENDING. Mirrors the
+   * OR-lookup that `invite` uses to link an invitee.
+   */
+  async lookupContact(contact: string) {
+    const c = contact.trim();
+    if (!c) return { exists: false, name: null };
+    const user = await this.prisma.user.findFirst({
+      where: { OR: [{ email: c }, { phone: c }] },
+      select: { name: true },
+    });
+    return { exists: !!user, name: user?.name ?? null };
+  }
+
+  async invite(ownerId: string, ownerName: string, dto: InviteGuardianDto) {
+    // If the invitee already has an account, attach their user id so the link
+    // surfaces as a request they can accept. The link always starts PENDING —
+    // it only becomes active once they accept (see `respond`).
     const invitee = await this.prisma.user.findFirst({
       where: { OR: [{ email: dto.contact }, { phone: dto.contact }] },
     });
-    return this.prisma.guardianLink.create({
+    const link = await this.prisma.guardianLink.create({
       data: {
         ownerId,
         name: dto.name,
+        relationship: dto.relationship ?? null,
         inviteeContact: dto.contact,
         guardianUserId: invitee?.id ?? null,
-        status: dto.watchMode ?? 'PENDING',
+        status: 'PENDING',
+        watchMode: dto.watchMode ?? 'ACTIVE',
       },
     });
+
+    // Notify the invitee if they're already a Sakhi user with a push token.
+    // Non-users can't be reached (no SMS/email channel); they keep the link row.
+    if (invitee?.expoPushToken) {
+      await this.notifications.sendPush(
+        [invitee.expoPushToken],
+        `${ownerName} added you to their circle`,
+        `You're now a guardian for ${ownerName} on Sakhi.`,
+        { type: 'guardian-invite', linkId: link.id, ownerId },
+      );
+    }
+
+    return link;
   }
 
   async updateStatus(ownerId: string, linkId: string, dto: UpdateGuardianDto) {
@@ -55,10 +93,73 @@ export class GuardiansService {
     const link = await this.prisma.guardianLink.findUnique({ where: { id: linkId } });
     if (!link) throw new NotFoundException('Invite not found');
     if (link.guardianUserId !== guardianUserId) throw new ForbiddenException();
-    return this.prisma.guardianLink.update({
+
+    // Decline: mark the A→B link declined, no reverse link created.
+    if (!accept) {
+      return this.prisma.guardianLink.update({
+        where: { id: linkId },
+        data: { status: 'DECLINED' },
+      });
+    }
+
+    // Only a still-pending invite can be accepted — ignore re-accepts of an
+    // already-resolved (ACTIVE / SOS_ONLY / DECLINED) link so the reverse-link
+    // upsert doesn't run twice.
+    if (link.status !== 'PENDING') return link;
+
+    // Accept: activate the A→B link with its intended watch mode, and make the
+    // relationship reciprocal by creating/activating the reverse B→A link so
+    // both people are guardians of each other.
+    const mode = link.watchMode; // ACTIVE | SOS_ONLY
+    const bId = link.guardianUserId; // the accepting user (B)
+    const aId = link.ownerId; // the original owner (A)
+
+    const updated = await this.prisma.guardianLink.update({
       where: { id: linkId },
-      data: { status: accept ? 'ACTIVE' : 'DECLINED' },
+      data: { status: mode },
     });
+
+    // A's user record — needed for the reverse link's display name/contact and
+    // the accepted push.
+    const aUser = await this.prisma.user.findUnique({ where: { id: aId } });
+    // B's user record — used for the push copy sent to A.
+    const bUser = await this.prisma.user.findUnique({ where: { id: bId } });
+
+    // Upsert the reverse link (owner=B, guardian=A) without duplicating.
+    const reverse = await this.prisma.guardianLink.findFirst({
+      where: { ownerId: bId, guardianUserId: aId },
+    });
+    if (reverse) {
+      await this.prisma.guardianLink.update({
+        where: { id: reverse.id },
+        data: { status: mode, watchMode: mode },
+      });
+    } else {
+      await this.prisma.guardianLink.create({
+        data: {
+          ownerId: bId,
+          guardianUserId: aId,
+          name: aUser?.name ?? 'Guardian',
+          relationship: null,
+          inviteeContact: aUser?.email ?? aUser?.phone ?? null,
+          status: mode,
+          watchMode: mode,
+        },
+      });
+    }
+
+    // Best-effort: tell A that B accepted (only if A has a push token).
+    if (aUser?.expoPushToken) {
+      const bName = bUser?.name ?? 'Someone';
+      await this.notifications.sendPush(
+        [aUser.expoPushToken],
+        `${bName} accepted your guardian request`,
+        'You can now see each other on Sakhi.',
+        { type: 'guardian-accepted', linkId },
+      );
+    }
+
+    return updated;
   }
 
   async remove(ownerId: string, linkId: string) {

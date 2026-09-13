@@ -1,0 +1,28 @@
+crime_type,locality,incident_date,severity,time_of_day,n_articles,matched,lat,lon,zone,commissionerate,geo_confidence
+sexual_offence,Ashok Nagar,,4,unknown,1,Ashok Nagar,17.405,78.502,Central,Hyderabad City,0.7
+sexual_offence,Attapur,2026-07-18,4,unknown,1,Attapur,17.363,78.425,South West,Hyderabad City,0.7
+traffic_fatality,Balanagar,2026-08-02,4,unknown,1,Balanagar,17.47,78.44,Balanagar,Cyberabad,0.7
+other,Balapur,2026-08-04,2,unknown,1,Balapur,17.32,78.5,South,Hyderabad City,0.7
+sexual_offence,Banjara Hills,2019-05-15,5,unknown,1,Banjara Hills,17.412,78.437,West,Hyderabad City,0.7
+assault,Bhavani Nagar,2026-08-06,4,unknown,1,Bhavani Nagar,17.372,78.52,South East,Hyderabad City,0.7
+other,Boduppal,2026-08-06,4,afternoon,1,Boduppal,17.407,78.56,Malkajgiri,Rachakonda,0.7
+narcotics,Chandanagar,,3,unknown,1,Chandanagar,17.495,78.32,Balanagar,Cyberabad,0.7
+fraud,Chandrayangutta,,3,unknown,2,Chandrayangutta,17.335,78.49,South,Hyderabad City,0.7
+assault,Gudimalkapur,2026-08-05,5,morning,1,Gudimalkapur,17.385,78.445,South,Hyderabad City,0.7
+narcotics,Hussainialam,2026-07-30,3,unknown,1,Hussainialam,17.36,78.47,South,Hyderabad City,0.7
+narcotics,Kachiguda,2026-08-07,2,unknown,1,Kachiguda,17.386,78.492,Central,Hyderabad City,0.7
+homicide,Kavadiguda,2026-08-05,5,late_night,1,Kavadiguda,17.41,78.495,Central,Hyderabad City,0.7
+assault,Kothapet,2026-08-03,3,evening,2,Kothapet,17.368,78.535,LB Nagar,Rachakonda,0.7
+fraud,Malakpet,,3,unknown,1,Malakpet,17.374,78.503,South East,Hyderabad City,0.7
+assault,Malakpet,2026-07-17,4,night,1,Malakpet,17.374,78.503,South East,Hyderabad City,0.7
+fraud,Mamidipally,,3,unknown,1,Mamidipally,17.28,78.52,South,Hyderabad City,0.7
+other,Manikonda,2026-08-05,2,unknown,1,Manikonda,17.402,78.383,Madhapur,Cyberabad,0.7
+robbery,Miyapur,2026-07-31,3,unknown,1,Miyapur,17.496,78.358,Balanagar,Cyberabad,0.7
+homicide,Nampally,,5,unknown,1,Nampally,17.392,78.47,Central,Hyderabad City,0.7
+theft,Nanakramguda,2022-05-07,2,unknown,1,Nanakramguda,17.418,78.343,Madhapur,Cyberabad,0.7
+other,Pahadishareef,,5,unknown,1,Pahadishareef,17.31,78.52,South,Hyderabad City,0.7
+sexual_offence,Punjagutta,2026-07-31,3,early_morning,1,Punjagutta,17.428,78.45,West,Hyderabad City,0.7
+homicide,Saidabad,2026-08-04,5,unknown,1,Saidabad,17.36,78.5,South East,Hyderabad City,0.7
+sexual_offence,Serilingampally,2026-07-27,5,night,2,Serilingampally,17.485,78.33,Madhapur,Cyberabad,0.7
+cybercrime,Somajiguda,,3,unknown,1,Somajiguda,17.424,78.458,West,Hyderabad City,0.7
+traffic_fatality,Yousufguda,2026-08-02,4,morning,3,Yousufguda,17.437,78.442,West,Hyderabad City,0.7

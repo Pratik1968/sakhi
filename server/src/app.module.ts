@@ -10,6 +10,9 @@ import { LocationModule } from './location/location.module';
 import { SosModule } from './sos/sos.module';
 import { IncidentsModule } from './incidents/incidents.module';
 import { EvidenceModule } from './evidence/evidence.module';
+import { RoutesModule } from './routes/routes.module';
+import { PlacesModule } from './places/places.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -24,6 +27,9 @@ import { EvidenceModule } from './evidence/evidence.module';
     SosModule,
     IncidentsModule,
     EvidenceModule,
+    RoutesModule,
+    PlacesModule,
+    ChatModule,
   ],
 })
 export class AppModule {}

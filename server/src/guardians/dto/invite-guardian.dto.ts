@@ -8,6 +8,11 @@ export class InviteGuardianDto {
   @IsString()
   contact!: string;
 
+  // optional relationship label e.g. Sister | Flatmate | Family
+  @IsOptional()
+  @IsString()
+  relationship?: string;
+
   @IsOptional()
   @IsIn(['ACTIVE', 'SOS_ONLY'])
   watchMode?: 'ACTIVE' | 'SOS_ONLY';

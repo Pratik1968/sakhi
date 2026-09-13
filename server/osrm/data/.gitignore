@@ -1,0 +1,4 @@
+# OSRM graph + OSM extracts are large build artifacts produced by ../build.sh.
+# Do not commit them — rebuild locally instead.
+*
+!.gitignore

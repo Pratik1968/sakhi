@@ -18,10 +18,10 @@ COPY tsconfig*.json nest-cli.json ./
 COPY src ./src
 RUN npm run build
 
-# Precompile the seed script to JS so the runtime can run it with plain `node`
+# Precompile the seed scripts to JS so the runtime can run them with plain `node`
 # (ts-node can't load .ts under Node 20's ESM resolver).
-RUN npx tsc prisma/seed.ts --outDir prisma --module commonjs --target ES2021 \
-    --esModuleInterop --skipLibCheck --resolveJsonModule
+RUN npx tsc prisma/seed.ts prisma/seed-crime.ts --outDir prisma --module commonjs \
+    --target ES2021 --esModuleInterop --skipLibCheck --resolveJsonModule
 
 # ---- Runtime stage ----
 FROM node:20-bookworm-slim AS runtime
@@ -40,8 +40,8 @@ COPY package.json ./
 COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
-# Data (SQLite db + uploaded evidence) lives on a volume so it survives restarts.
-ENV DATABASE_URL="file:/data/dev.db"
+# DATABASE_URL is supplied at runtime (docker-compose points at the `db`
+# service). Uploaded evidence lives on a volume so it survives restarts.
 ENV UPLOADS_DIR="/data/uploads"
 ENV PORT=4000
 RUN mkdir -p /data/uploads

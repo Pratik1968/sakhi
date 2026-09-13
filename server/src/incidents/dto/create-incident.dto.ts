@@ -7,7 +7,11 @@ export class CreateIncidentDto {
 
   @IsOptional()
   @IsString()
-  note?: string;
+  area?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 
   @IsOptional()
   @IsNumber()

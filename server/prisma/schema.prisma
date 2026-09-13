@@ -1,13 +1,14 @@
-// Sakhi backend data model. SQLite for local dev (swap `provider`/`DATABASE_URL`
-// for Postgres in production). SQLite has no native enums — status fields are
-// strings with the allowed values documented inline.
+// Sakhi backend data model. Postgres (local dev via docker-compose `db` service,
+// see docker-compose.yml + server/.env). Status fields are strings with the
+// allowed values documented inline (kept as strings rather than native enums so
+// new statuses can be added without a migration).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -41,8 +42,12 @@ model GuardianLink {
   guardian       User?    @relation("Guardian", fields: [guardianUserId], references: [id])
   inviteeContact String? // email or phone used to invite, before they sign up
   name           String
+  relationship   String? // optional label e.g. Sister | Flatmate | Family
   // PENDING | ACTIVE | SOS_ONLY | DECLINED
   status         String   @default("PENDING")
+  // Intended watch mode (ACTIVE | SOS_ONLY) remembered while the link is PENDING,
+  // applied to both directions once the invitee accepts.
+  watchMode      String   @default("ACTIVE")
   createdAt      DateTime @default(now())
 
   @@index([ownerId])
@@ -82,11 +87,12 @@ model Incident {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String // harassment | unsafe-area | stalking | other
-  note      String?
-  lat       Float?
-  lng       Float?
-  createdAt DateTime @default(now())
+  type        String // harassment | unsafe-area | stalking | other
+  area        String? // human-readable place label for the report location
+  description String? // free-text description of what happened
+  lat         Float?
+  lng         Float?
+  createdAt   DateTime @default(now())
 
   evidence Evidence[]
 
@@ -107,4 +113,52 @@ model Evidence {
   createdAt  DateTime  @default(now())
 
   @@index([userId])
+}
+
+// Geocoded crime-news incidents used by the safe-route planner (Phase 6 of the
+// sakhi_model pipeline). Seeded from server/prisma/data/incidents_geo.csv; add
+// more rows to that CSV and re-run the crime seed to grow the dataset over time.
+// Hyderabad-only, crime-NEWS reporting density (n<5 per locality) — a
+// methodology demo, not a safety guarantee.
+model CrimeIncident {
+  id              String    @id @default(cuid())
+  // sexual_offence | assault | homicide | robbery | theft | burglary |
+  // narcotics | fraud | cybercrime | traffic_fatality | other | not_crime
+  crimeType       String
+  locality        String
+  incidentDate    DateTime?
+  severity        Int // 1–5
+  // day | night | unknown
+  timeOfDay       String    @default("unknown")
+  nArticles       Int       @default(1)
+  lat             Float
+  lon             Float
+  zone            String?
+  commissionerate String?
+  geoConfidence   Float?
+  // Provenance so future non-news sources (police records, user reports) mix in.
+  source          String    @default("gdelt-news")
+  createdAt       DateTime  @default(now())
+
+  @@index([lat, lon])
+}
+
+// Static directory of nearby-help places (police stations, hospitals, women's
+// support centres) for the "Nearby help" screen. Standalone reference table
+// (like CrimeIncident, no FK). Seeded from server/prisma/data/places.csv —
+// gathered once from OpenStreetMap Overpass + a curated women-support list.
+// Uses `lng` (client/`?lng=` convention), not `lon`.
+model NearbyPlace {
+  id        String   @id @default(cuid())
+  category  String // police | hospital | support
+  name      String
+  address   String?
+  phone     String?
+  lat       Float
+  lng       Float
+  source    String   @default("osm-overpass")
+  createdAt DateTime @default(now())
+
+  @@index([category])
+  @@index([lat, lng])
 }

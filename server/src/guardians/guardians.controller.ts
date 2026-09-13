@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser, AuthUser } from '../auth/current-user.decorator';
 import { GuardiansService } from './guardians.service';
@@ -19,9 +19,14 @@ export class GuardiansController {
     return this.guardians.watching(user.id);
   }
 
+  @Get('lookup')
+  lookup(@Query('contact') contact = '') {
+    return this.guardians.lookupContact(contact);
+  }
+
   @Post()
   invite(@CurrentUser() user: AuthUser, @Body() dto: InviteGuardianDto) {
-    return this.guardians.invite(user.id, dto);
+    return this.guardians.invite(user.id, user.name, dto);
   }
 
   @Patch(':id')
