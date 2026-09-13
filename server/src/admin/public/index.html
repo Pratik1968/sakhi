@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sakhi OPS — Admin</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --coral: #E5484D;
+      --coral-dim: #b83b3f;
+      --sidebar: #1a1a1e;
+      --sidebar-2: #232329;
+      --bg: #f5f5f7;
+      --card: #ffffff;
+      --border: #e4e4e9;
+      --text: #1a1a1e;
+      --muted: #6b6b76;
+      --good: #2f9e44;
+      --warn: #e8a800;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+    }
+    button { font-family: inherit; cursor: pointer; }
+    a { color: var(--coral); }
+
+    /* ---------- Login ---------- */
+    #login {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 30% 20%, #2a2a33, #131317);
+      padding: 20px;
+    }
+    .login-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+    .brand {
+      font-size: 22px; font-weight: 700; letter-spacing: -0.4px;
+      margin: 0 0 4px;
+    }
+    .brand span { color: var(--coral); }
+    .login-card p.sub { color: var(--muted); margin: 0 0 24px; font-size: 13px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+    .field input {
+      width: 100%; padding: 11px 12px; border: 1px solid var(--border);
+      border-radius: 9px; font-size: 14px; outline: none;
+    }
+    .field input:focus { border-color: var(--coral); }
+    .btn-primary {
+      width: 100%; background: var(--coral); color: #fff; border: none;
+      padding: 12px; border-radius: 9px; font-weight: 600; font-size: 14px;
+      margin-top: 6px;
+    }
+    .btn-primary:hover { background: var(--coral-dim); }
+    .err { color: var(--coral); font-size: 13px; margin-top: 12px; min-height: 18px; }
+
+    /* ---------- Shell ---------- */
+    #app { display: none; }
+    .shell { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 220px; background: var(--sidebar); color: #d7d7de;
+      display: flex; flex-direction: column; position: sticky; top: 0;
+      height: 100vh; flex-shrink: 0;
+    }
+    .sidebar .logo { padding: 22px 20px 16px; font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .sidebar .logo span { color: var(--coral); }
+    .nav { flex: 1; overflow-y: auto; padding: 6px 10px; }
+    .nav a {
+      display: block; padding: 10px 12px; border-radius: 8px; color: #b4b4be;
+      text-decoration: none; font-size: 13.5px; margin-bottom: 2px;
+    }
+    .nav a:hover { background: var(--sidebar-2); color: #fff; }
+    .sidebar .foot { padding: 14px 16px; border-top: 1px solid #2c2c34; }
+    .btn-logout {
+      width: 100%; background: transparent; color: #b4b4be;
+      border: 1px solid #3a3a44; border-radius: 8px; padding: 9px; font-size: 13px;
+    }
+    .btn-logout:hover { color: #fff; border-color: var(--coral); }
+
+    .main { flex: 1; padding: 24px 28px 60px; max-width: 100%; overflow-x: hidden; }
+    .main h1 { font-size: 20px; margin: 0 0 2px; letter-spacing: -0.3px; }
+    .main .lead { color: var(--muted); margin: 0 0 22px; font-size: 13px; }
+
+    section.panel { margin-bottom: 34px; scroll-margin-top: 12px; }
+    section.panel h2 {
+      font-size: 15px; margin: 0 0 12px; font-weight: 700; letter-spacing: -0.2px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px;
+    }
+
+    /* KPI */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+    .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+    .kpi .v { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+    .kpi .l { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .kpi.accent .v { color: var(--coral); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } .sidebar { width: 64px; } .sidebar .logo, .nav a span.t { display: none; } }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .3px; }
+    tbody tr:hover { background: #fafafa; }
+    .table-wrap { overflow-x: auto; }
+
+    .badge {
+      display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
+    }
+    .badge.good { background: #e6f5ea; color: var(--good); }
+    .badge.bad { background: #fdeaea; color: var(--coral); }
+    .badge.st-ACTIVE { background: #fdeaea; color: var(--coral); }
+    .badge.st-RESOLVED { background: #e6f5ea; color: var(--good); }
+    .badge.st-CANCELLED { background: #eee; color: var(--muted); }
+
+    .chart-box { position: relative; height: 260px; }
+    #map { height: 420px; border-radius: 10px; overflow: hidden; }
+    .metrics-row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 14px; }
+    .metric .v { font-size: 22px; font-weight: 700; }
+    .metric .l { color: var(--muted); font-size: 12px; }
+    .helplines li { margin-bottom: 6px; }
+    .health-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+    .dim { color: var(--muted); }
+    .legend { font-size: 12px; color: var(--muted); margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap; }
+    .legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+    .sev1::before { background: #94c11f; } .sev2::before { background: #94c11f; }
+    .sev3::before { background: #e8a800; } .sev4::before { background: #f26b21; }
+    .sev5::before { background: #E5484D; } .rep::before { background: #3b82f6; }
+  </style>
+</head>
+<body>
+  <!-- LOGIN -->
+  <div id="login">
+    <div class="login-card">
+      <h1 class="brand">sakhi <span>OPS</span></h1>
+      <p class="sub">Admin dashboard — sign in to continue</p>
+      <form id="loginForm">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password" required />
+        </div>
+        <button class="btn-primary" type="submit">Sign in</button>
+        <div class="err" id="loginErr"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app">
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="logo">sakhi <span>OPS</span></div>
+        <nav class="nav">
+          <a href="#summary"><span class="t">Overview</span></a>
+          <a href="#users"><span class="t">Users</span></a>
+          <a href="#incidents"><span class="t">Incidents</span></a>
+          <a href="#hotspots"><span class="t">Crime hotspots</span></a>
+          <a href="#sos"><span class="t">SOS response</span></a>
+          <a href="#contacts"><span class="t">Emergency contacts</span></a>
+          <a href="#health"><span class="t">App health</span></a>
+        </nav>
+        <div class="foot">
+          <button class="btn-logout" id="logoutBtn">Log out</button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <h1>Operations dashboard</h1>
+        <p class="lead" id="whoami"></p>
+
+        <section class="panel" id="summary">
+          <h2>Overview</h2>
+          <div class="kpi-grid" id="kpiGrid"></div>
+        </section>
+
+        <section class="panel" id="users">
+          <h2>User management</h2>
+          <div class="card table-wrap">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th><th>Reports</th><th>SOS</th><th>Guardians</th></tr>
+              </thead>
+              <tbody id="usersBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="incidents">
+          <h2>Incident analytics</h2>
+          <div class="grid-2">
+            <div class="card"><div class="chart-box"><canvas id="incByType"></canvas></div></div>
+            <div class="card"><div class="chart-box"><canvas id="incByDay"></canvas></div></div>
+          </div>
+          <div class="card table-wrap" style="margin-top:16px;">
+            <table>
+              <thead><tr><th>Type</th><th>Area</th><th>When</th></tr></thead>
+              <tbody id="incRecentBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="hotspots">
+          <h2>Crime hotspots</h2>
+          <div class="card">
+            <div id="map"></div>
+            <div class="legend">
+              <span class="sev1">Sev 1</span><span class="sev2">Sev 2</span>
+              <span class="sev3">Sev 3</span><span class="sev4">Sev 4</span>
+              <span class="sev5">Sev 5</span><span class="rep">User report</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="sos">
+          <h2>SOS response monitoring</h2>
+          <div class="grid-2">
+            <div class="card"><div class="chart-box"><canvas id="sosDoughnut"></canvas></div></div>
+            <div class="card">
+              <div class="metrics-row">
+                <div class="metric"><div class="v" id="sosAvg">—</div><div class="l">Avg response</div></div>
+                <div class="metric"><div class="v" id="sosMedian">—</div><div class="l">Median response</div></div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Status</th><th>Started</th><th>Resolved</th><th>Response</th></tr></thead>
+                  <tbody id="sosBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="contacts">
+          <h2>Emergency-contact statistics</h2>
+          <div class="grid-2">
+            <div class="card"><div class="chart-box"><canvas id="guardianStatus"></canvas></div></div>
+            <div class="card"><div class="chart-box"><canvas id="guardianWatch"></canvas></div></div>
+          </div>
+          <div class="grid-2" style="margin-top:16px;">
+            <div class="card"><div class="chart-box"><canvas id="placeCat"></canvas></div></div>
+            <div class="card">
+              <h2 style="font-size:13px;">Helplines</h2>
+              <ul class="helplines" id="helplines"></ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="health">
+          <h2>Application health <span id="healthPulse" class="dim" style="font-size:11px;font-weight:400;"></span></h2>
+          <div class="card">
+            <div class="health-grid" id="healthGrid"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    'use strict';
+    const TOKEN_KEY = 'sakhi.admin.token';
+
+    // Escape all user-supplied strings before DOM insertion.
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, function (c) {
+        return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+      });
+    }
+    function getToken() { return localStorage.getItem(TOKEN_KEY); }
+    function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
+    function clearToken() { localStorage.removeItem(TOKEN_KEY); }
+
+    // ---- DOM helpers (build nodes with textContent, never raw innerHTML of user data) ----
+    function el(tag, text, cls) {
+      const n = document.createElement(tag);
+      if (text != null) n.textContent = String(text);
+      if (cls) n.className = cls;
+      return n;
+    }
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      if (isNaN(d)) return '—';
+      return d.toLocaleString(undefined, { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+    function fmtDay(iso) {
+      const d = new Date(iso);
+      return isNaN(d) ? '—' : d.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
+    }
+    function fmtSec(s) {
+      if (s == null) return '—';
+      if (s < 60) return Math.round(s) + 's';
+      if (s < 3600) return Math.round(s / 60) + 'm';
+      return (s / 3600).toFixed(1) + 'h';
+    }
+    function fmtUptime(sec) {
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      if (h) return h + 'h ' + m + 'm';
+      if (m) return m + 'm ' + s + 's';
+      return s + 's';
+    }
+
+    // ---- Views ----
+    const loginView = document.getElementById('login');
+    const appView = document.getElementById('app');
+    function showLogin(msg) {
+      appView.style.display = 'none';
+      loginView.style.display = 'flex';
+      document.getElementById('loginErr').textContent = msg || '';
+    }
+    function showApp() {
+      loginView.style.display = 'none';
+      appView.style.display = 'block';
+    }
+
+    // ---- Auth-aware fetch ----
+    async function adminFetch(path) {
+      const res = await fetch('/api/admin' + path, {
+        headers: { Authorization: 'Bearer ' + getToken() },
+      });
+      if (res.status === 401 || res.status === 403) {
+        clearToken();
+        stopHealthTimer();
+        showLogin('Session expired or not an admin. Please sign in again.');
+        throw new Error('unauthorized');
+      }
+      if (!res.ok) throw new Error('Request failed: ' + res.status);
+      return res.json();
+    }
+
+    // ---- Login flow ----
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const errEl = document.getElementById('loginErr');
+      errEl.textContent = '';
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        if (!res.ok) { errEl.textContent = 'Invalid credentials.'; return; }
+        const data = await res.json();
+        if (!data.token) { errEl.textContent = 'Login failed.'; return; }
+        setToken(data.token);
+        showApp();
+        boot(data.user);
+      } catch (err) {
+        errEl.textContent = 'Network error. Is the server running?';
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', function () {
+      clearToken();
+      stopHealthTimer();
+      showLogin('');
+    });
+
+    // ---- Charts registry ----
+    const charts = {};
+    function makeChart(id, config) {
+      if (charts[id]) charts[id].destroy();
+      const ctx = document.getElementById(id).getContext('2d');
+      charts[id] = new Chart(ctx, config);
+    }
+    const CORAL = '#E5484D';
+    const PALETTE = ['#E5484D', '#3b82f6', '#2f9e44', '#e8a800', '#8b5cf6', '#f26b21', '#06b6d4', '#94c11f'];
+
+    // ---- Panels ----
+    async function loadSummary() {
+      const s = await adminFetch('/summary');
+      const grid = document.getElementById('kpiGrid');
+      grid.textContent = '';
+      const items = [
+        ['Total users', s.totalUsers, false],
+        ['New (7d)', s.newUsers7d, false],
+        ['Incidents', s.totalIncidents, false],
+        ['Incidents (7d)', s.incidents7d, false],
+        ['Active SOS', s.activeSos, true],
+        ['Total SOS', s.totalSos, false],
+        ['Guardians active', s.guardiansActive, false],
+        ['Guardians pending', s.guardiansPending, false],
+        ['Evidence files', s.evidence, false],
+        ['Nearby places', s.places, false],
+        ['Crime records', s.crimeIncidents, false],
+      ];
+      for (const [label, value, accent] of items) {
+        const card = el('div', null, 'kpi' + (accent ? ' accent' : ''));
+        card.appendChild(el('div', value ?? 0, 'v'));
+        card.appendChild(el('div', label, 'l'));
+        grid.appendChild(card);
+      }
+    }
+
+    async function loadUsers() {
+      const users = await adminFetch('/users?limit=100');
+      const body = document.getElementById('usersBody');
+      body.textContent = '';
+      for (const u of users) {
+        const tr = document.createElement('tr');
+        tr.appendChild(el('td', u.name));
+        tr.appendChild(el('td', u.email));
+        tr.appendChild(el('td', u.phone || '—'));
+        tr.appendChild(el('td', fmtDay(u.createdAt)));
+        const c = u._count || {};
+        tr.appendChild(el('td', c.incidents ?? 0));
+        tr.appendChild(el('td', c.sosEvents ?? 0));
+        tr.appendChild(el('td', c.guardianLinks ?? 0));
+        body.appendChild(tr);
+      }
+      if (!users.length) {
+        const tr = document.createElement('tr');
+        const td = el('td', 'No users yet.', 'dim');
+        td.colSpan = 7;
+        tr.appendChild(td);
+        body.appendChild(tr);
+      }
+    }
+
+    async function loadIncidents() {
+      const a = await adminFetch('/incidents/analytics');
+      makeChart('incByType', {
+        type: 'bar',
+        data: {
+          labels: a.byType.map(function (t) { return t.type; }),
+          datasets: [{ label: 'Reports', data: a.byType.map(function (t) { return t.count; }), backgroundColor: CORAL }],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } },
+      });
+      makeChart('incByDay', {
+        type: 'line',
+        data: {
+          labels: a.byDay.map(function (d) { return d.date.slice(5); }),
+          datasets: [{ label: 'Reports/day', data: a.byDay.map(function (d) { return d.count; }),
+            borderColor: CORAL, backgroundColor: 'rgba(229,72,77,.15)', fill: true, tension: .3, pointRadius: 0 }],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+      });
+      const body = document.getElementById('incRecentBody');
+      body.textContent = '';
+      for (const r of a.recent) {
+        const tr = document.createElement('tr');
+        tr.appendChild(el('td', r.type));
+        tr.appendChild(el('td', r.area || '—'));
+        tr.appendChild(el('td', fmtDate(r.createdAt)));
+        body.appendChild(tr);
+      }
+    }
+
+    let map = null;
+    let hotspotLayer = null;
+    function sevColor(sev) {
+      return ['#94c11f','#94c11f','#e8a800','#f26b21','#E5484D'][Math.max(1, Math.min(5, sev || 3)) - 1];
+    }
+    async function loadHotspots() {
+      const h = await adminFetch('/hotspots');
+      if (!map) {
+        map = L.map('map').setView([17.40, 78.48], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors', maxZoom: 19,
+        }).addTo(map);
+      }
+      if (hotspotLayer) { map.removeLayer(hotspotLayer); }
+      hotspotLayer = L.layerGroup().addTo(map);
+      for (const c of h.crime) {
+        if (c.lat == null || c.lon == null) continue;
+        const m = L.circleMarker([c.lat, c.lon], {
+          radius: 5 + (c.severity || 1), color: sevColor(c.severity),
+          fillColor: sevColor(c.severity), fillOpacity: .6, weight: 1,
+        });
+        m.bindPopup('<b>' + esc(c.crimeType) + '</b><br>' + esc(c.locality) + '<br>Severity ' + esc(c.severity));
+        hotspotLayer.addLayer(m);
+      }
+      for (const r of h.reports) {
+        if (r.lat == null || r.lng == null) continue;
+        const m = L.circleMarker([r.lat, r.lng], {
+          radius: 6, color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: .85, weight: 2,
+        });
+        m.bindPopup('<b>Report: ' + esc(r.type) + '</b><br>' + esc(r.area || '') + '<br>' + esc(fmtDate(r.createdAt)));
+        hotspotLayer.addLayer(m);
+      }
+      setTimeout(function () { map.invalidateSize(); }, 100);
+    }
+
+    async function loadSos() {
+      const s = await adminFetch('/sos');
+      const statusColors = { ACTIVE: CORAL, RESOLVED: '#2f9e44', CANCELLED: '#9aa0aa' };
+      makeChart('sosDoughnut', {
+        type: 'doughnut',
+        data: {
+          labels: s.byStatus.map(function (x) { return x.status; }),
+          datasets: [{ data: s.byStatus.map(function (x) { return x.count; }),
+            backgroundColor: s.byStatus.map(function (x) { return statusColors[x.status] || '#ccc'; }) }],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+      });
+      document.getElementById('sosAvg').textContent = fmtSec(s.avgResponseSec);
+      document.getElementById('sosMedian').textContent = fmtSec(s.medianResponseSec);
+      const body = document.getElementById('sosBody');
+      body.textContent = '';
+      for (const e of s.recent) {
+        const tr = document.createElement('tr');
+        const st = el('td');
+        st.appendChild(el('span', e.status, 'badge st-' + esc(e.status)));
+        tr.appendChild(st);
+        tr.appendChild(el('td', fmtDate(e.startedAt)));
+        tr.appendChild(el('td', fmtDate(e.resolvedAt)));
+        tr.appendChild(el('td', fmtSec(e.responseSec)));
+        body.appendChild(tr);
+      }
+    }
+
+    async function loadContacts() {
+      const c = await adminFetch('/contacts');
+      makeChart('guardianStatus', {
+        type: 'bar',
+        data: {
+          labels: c.guardianByStatus.map(function (x) { return x.status; }),
+          datasets: [{ label: 'Guardian links', data: c.guardianByStatus.map(function (x) { return x.count; }),
+            backgroundColor: PALETTE }],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Guardian links by status' } } },
+      });
+      makeChart('guardianWatch', {
+        type: 'bar',
+        data: {
+          labels: c.guardianByWatchMode.map(function (x) { return x.watchMode; }),
+          datasets: [{ label: 'Watch mode', data: c.guardianByWatchMode.map(function (x) { return x.count; }),
+            backgroundColor: PALETTE }],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Guardian links by watch mode' } } },
+      });
+      makeChart('placeCat', {
+        type: 'bar',
+        data: {
+          labels: c.placesByCategory.map(function (x) { return x.category; }),
+          datasets: [{ label: 'Places', data: c.placesByCategory.map(function (x) { return x.count; }),
+            backgroundColor: PALETTE }],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Nearby places by category' } } },
+      });
+      const ul = document.getElementById('helplines');
+      ul.textContent = '';
+      for (const h of c.helplines) {
+        const li = document.createElement('li');
+        li.appendChild(el('strong', h.label + ': '));
+        li.appendChild(document.createTextNode(h.number));
+        ul.appendChild(li);
+      }
+    }
+
+    async function loadHealth() {
+      const h = await adminFetch('/health');
+      const grid = document.getElementById('healthGrid');
+      grid.textContent = '';
+      function tile(label, valueNode) {
+        const card = el('div', null, 'kpi');
+        const v = el('div', null, 'v');
+        if (typeof valueNode === 'string') v.textContent = valueNode;
+        else v.appendChild(valueNode);
+        card.appendChild(v);
+        card.appendChild(el('div', label, 'l'));
+        grid.appendChild(card);
+      }
+      const dbBadge = el('span', h.dbUp ? 'UP' : 'DOWN', 'badge ' + (h.dbUp ? 'good' : 'bad'));
+      const num = function (v) { return v == null ? '—' : String(v); };
+      tile('Database', dbBadge);
+      tile('Uptime', fmtUptime(h.uptimeSec));
+      tile('Memory RSS', (h.memory.rssMb) + ' MB');
+      tile('Heap used', (h.memory.heapUsedMb) + ' MB');
+      tile('Node', h.nodeVersion);
+      tile('Users', num(h.counts.users));
+      tile('Incidents', num(h.counts.incidents));
+      tile('SOS events', num(h.counts.sos));
+      tile('Crime records', num(h.counts.crimeIncidents));
+      tile('Nearby places', num(h.counts.places));
+      document.getElementById('healthPulse').textContent = 'updated ' + fmtDate(h.timestamp);
+    }
+
+    // ---- Health auto-refresh ----
+    let healthTimer = null;
+    function startHealthTimer() {
+      stopHealthTimer();
+      healthTimer = setInterval(function () {
+        loadHealth().catch(function () {});
+      }, 15000);
+    }
+    function stopHealthTimer() {
+      if (healthTimer) { clearInterval(healthTimer); healthTimer = null; }
+    }
+
+    async function boot(user) {
+      if (user) {
+        document.getElementById('whoami').textContent =
+          'Signed in as ' + (user.name || user.email || '');
+      }
+      const tasks = [loadSummary, loadUsers, loadIncidents, loadHotspots, loadSos, loadContacts, loadHealth];
+      for (const t of tasks) {
+        try { await t(); } catch (e) { if (e && e.message === 'unauthorized') return; }
+      }
+      startHealthTimer();
+    }
+
+    // ---- Startup ----
+    if (getToken()) {
+      showApp();
+      boot(null);
+    } else {
+      showLogin('');
+    }
+  </script>
+</body>
+</html>

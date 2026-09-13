@@ -30,6 +30,9 @@ async function bootstrap() {
   if (!existsSync(uploadsDir)) mkdirSync(uploadsDir, { recursive: true });
   app.useStaticAssets(uploadsDir, { prefix: '/uploads/' });
 
+  // Serve the web admin dashboard (static bundle) at /admin
+  app.useStaticAssets(join(__dirname, 'admin', 'public'), { prefix: '/admin' });
+
   const port = Number(process.env.PORT ?? 4000);
   await app.listen(port);
   // eslint-disable-next-line no-console
