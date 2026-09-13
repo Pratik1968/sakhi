@@ -1,26 +1,71 @@
-# Sakhi backend (NestJS + Prisma/SQLite) in Docker.
+# Sakhi backend (NestJS + Prisma/Postgres) + self-hosted OSRM walking router.
 # Usage: `make docker-up`  (or `docker compose up -d --build`)
+#
+# One-time before first run: build the OSRM Hyderabad foot graph with
+#   `cd server/osrm && ./build.sh`
+# (produces server/osrm/data/hyderabad.osrm* consumed by the `osrm` service).
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: sakhi-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sakhi
+      POSTGRES_PASSWORD: sakhi
+      POSTGRES_DB: sakhi
+    ports:
+      # Host port 5433 (5432 is used by another local Postgres); container stays 5432.
+      - "5433:5432"
+    volumes:
+      - sakhi-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sakhi -d sakhi"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  osrm:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    container_name: sakhi-osrm
+    restart: unless-stopped
+    # Excluded from the default `docker compose up` — needs the Hyderabad graph
+    # built first (cd server/osrm && ./build.sh). Once built, start it with:
+    #   docker compose --profile routing up -d osrm
+    profiles: ["routing"]
+    command: osrm-routed --algorithm mld /data/hyderabad.osrm
+    ports:
+      # Host port 5001 (macOS AirPlay Receiver owns 5000); container stays 5000.
+      - "5001:5000"
+    volumes:
+      # Populated by server/osrm/build.sh (the .osrm* graph files).
+      - ./server/osrm/data:/data
+
   api:
     build:
       context: ./server
     image: sakhi-server:latest
     container_name: sakhi-api
     restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "4000:4000"
     environment:
       PORT: 4000
-      DATABASE_URL: "file:/data/dev.db"
+      DATABASE_URL: "postgresql://sakhi:sakhi@db:5432/sakhi?schema=public"
       UPLOADS_DIR: "/data/uploads"
       JWT_SECRET: "${JWT_SECRET:-sakhi-dev-secret-change-me}"
       JWT_EXPIRES_IN: "${JWT_EXPIRES_IN:-7d}"
       CORS_ORIGIN: "${CORS_ORIGIN:-*}"
-      # Seed demo data (meera@sakhi.app / password123) on first boot.
+      # In-cluster OSRM (the `osrm` service above).
+      OSRM_URL: "${OSRM_URL:-http://osrm:5000}"
+      # Seed demo data (meera@sakhi.app / password123) + crime incidents on boot.
       SEED_ON_START: "${SEED_ON_START:-true}"
     volumes:
-      # Persist the SQLite db + uploaded evidence across restarts/rebuilds.
+      # Persist uploaded evidence across restarts/rebuilds.
       - sakhi-data:/data
 
 volumes:
   sakhi-data:
+  sakhi-pgdata:

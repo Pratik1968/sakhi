@@ -11,7 +11,10 @@
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.pratikshekhar.sakhi",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Allow Sakhi to use your location so guardians can watch over you."
+        "NSLocationWhenInUseUsageDescription": "Allow Sakhi to use your location so guardians can watch over you.",
+        "NSCameraUsageDescription": "Allow Sakhi to use your camera to record video evidence for a report.",
+        "NSMicrophoneUsageDescription": "Allow Sakhi to use your microphone to record audio evidence for a report.",
+        "NSPhotoLibraryUsageDescription": "Allow Sakhi to access your photos so you can attach a video to a report."
       }
     },
     "android": {
@@ -24,8 +27,13 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
-      ]
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.pratikshekhar.sakhi"
     },
     "web": {
       "output": "static",
@@ -41,7 +49,29 @@
           "imageWidth": 76
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-image",
+      "expo-web-browser",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Allow $(PRODUCT_NAME) to access your contacts."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Sakhi to access your photos so you can attach a video to a report.",
+          "cameraPermission": "Allow Sakhi to use your camera to record video evidence for a report.",
+          "microphonePermission": "Allow Sakhi to use your microphone to record audio evidence for a report."
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow Sakhi to use your microphone to record audio evidence for a report."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

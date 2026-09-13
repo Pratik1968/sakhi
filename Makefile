@@ -31,7 +31,7 @@ server-install: ## Install backend dependencies
 
 .PHONY: server-setup
 server-setup: server-install db-generate db-migrate db-seed ## Install backend deps + generate client + migrate + seed
-	@echo "✅ Backend ready. Login: meera@sakhi.app / password123"
+	@echo "✅ Backend ready. Register an account in the app to sign in."
 
 ## ---- Database (local, non-Docker) ----
 
@@ -97,7 +97,7 @@ docker-build: ## Build the backend image
 .PHONY: docker-up
 docker-up: ## Build (if needed) and start the backend in the background
 	$(COMPOSE) up -d --build
-	@echo "✅ API on http://localhost:4000/api  (seeded: meera@sakhi.app / password123)"
+	@echo "✅ API on http://localhost:4000/api  (register an account in the app to sign in)"
 
 .PHONY: docker-down
 docker-down: ## Stop the backend container
@@ -108,8 +108,9 @@ docker-logs: ## Tail backend logs
 	$(COMPOSE) logs -f api
 
 .PHONY: docker-seed
-docker-seed: ## Seed demo data inside the running container
+docker-seed: ## Seed demo data + crime incidents inside the running container
 	$(COMPOSE) exec api node prisma/seed.js
+	$(COMPOSE) exec api node prisma/seed-crime.js
 
 .PHONY: docker-shell
 docker-shell: ## Open a shell in the running backend container
@@ -119,6 +120,16 @@ docker-shell: ## Open a shell in the running backend container
 docker-reset: ## Wipe the backend volume (db + uploads) and restart fresh
 	$(COMPOSE) down -v
 	$(COMPOSE) up -d --build
+
+## ---- OSRM (self-hosted walking router) ----
+
+.PHONY: osrm-build
+osrm-build: ## Build the Hyderabad walking graph (one-time, needs Docker)
+	cd $(SERVER)/osrm && ./build.sh
+
+.PHONY: osrm-up
+osrm-up: ## Start just the OSRM router (http://localhost:5000)
+	$(COMPOSE) up -d osrm
 
 ## ---- Cleanup ----
 

@@ -52,27 +52,48 @@ function safeJson(text: string): any {
   }
 }
 
-/** Multipart upload (evidence). `file` is an RN file descriptor {uri,name,type}. */
-async function upload<T>(
+/**
+ * Multipart upload (evidence). `file` is an RN file descriptor {uri,name,type}.
+ *
+ * Uses React Native's XMLHttpRequest instead of the global `fetch`: Expo SDK 54+
+ * installs a WinterCG `fetch` whose FormData serialization rejects RN's
+ * {uri,name,type} file parts ("Unsupported FormDataPart implementation"). RN's
+ * XHR uploads the part through native networking, streaming the file by uri.
+ */
+function upload<T>(
   path: string,
   file: { uri: string; name: string; type: string },
   fields: Record<string, string> = {},
 ): Promise<T> {
-  const form = new FormData();
-  // React Native FormData accepts this shape for file parts.
-  form.append('file', { uri: file.uri, name: file.name, type: file.type } as any);
-  for (const [k, v] of Object.entries(fields)) form.append(k, v);
+  return new Promise<T>((resolve, reject) => {
+    const form = new FormData();
+    // React Native FormData accepts this shape for file parts.
+    form.append('file', { uri: file.uri, name: file.name, type: file.type } as any);
+    for (const [k, v] of Object.entries(fields)) form.append(k, v);
 
-  const token = await tokenStore.get();
-  const res = await fetch(`${API_URL}${path}`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    body: form,
+    tokenStore
+      .get()
+      .then((token) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${API_URL}${path}`);
+        if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        // Do NOT set Content-Type — RN fills in the multipart boundary itself.
+        xhr.onload = () => {
+          const text = xhr.responseText;
+          const data = text ? safeJson(text) : null;
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(data as T);
+          } else {
+            const message =
+              (data && (data.message || data.error)) || xhr.statusText || 'Upload failed';
+            reject(new ApiError(xhr.status, Array.isArray(message) ? message.join(', ') : message));
+          }
+        };
+        xhr.onerror = () => reject(new ApiError(xhr.status || 0, 'Upload failed'));
+        xhr.send(form);
+      })
+      .catch(reject);
   });
-  const text = await res.text();
-  const data = text ? safeJson(text) : null;
-  if (!res.ok) throw new ApiError(res.status, (data && data.message) || 'Upload failed');
-  return data as T;
 }
 
 export const api = {
