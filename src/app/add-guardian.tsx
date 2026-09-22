@@ -11,6 +11,9 @@ import { normalizeContact } from '@/lib/format';
 import { colors, figtree, radius } from '@/theme/tokens';
 
 const WATCH = ['Live tracking', 'SOS only'] as const;
+
+
+
 type WatchOption = (typeof WATCH)[number];
 
 export default function AddGuardianScreen() {
