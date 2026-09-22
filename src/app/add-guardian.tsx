@@ -10,8 +10,8 @@ import { relationshipOptions } from '@/data/sakhi';
 import { normalizeContact } from '@/lib/format';
 import { colors, figtree, radius } from '@/theme/tokens';
 
-const WATCH = ['Live tracking', 'SOS only'] as const;
 type WatchOption = (typeof WATCH)[number];
+const WATCH = ['Live tracking', 'SOS only'] as const;
 
 export default function AddGuardianScreen() {
   const router = useRouter();
