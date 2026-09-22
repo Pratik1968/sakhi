@@ -8,11 +8,11 @@ import { navItems } from '@/data/admin';
 import { colors, figtree } from '@/theme/tokens';
 import { cardShadow } from '@/theme/shadows';
 
+// No control-room backend is connected, so every data surface renders an
+// honest empty state instead of fabricated metrics, names, or incidents.
 const NO_DATA = 'No data — control-room backend not connected.';
 
 const kpiLabels = ['Open SOS', 'Median response', 'Protected users', 'Reports tonight'];
-// No control-room backend is connected, so every data surface renders an
-// honest empty state instead of fabricated metrics, names, or incidents.
 
 function EmptyState({ text = NO_DATA }: { text?: string }) {
   return (
