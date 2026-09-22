@@ -81,9 +81,10 @@
     .nav { flex: 1; overflow-y: auto; padding: 6px 10px; }
     .nav a {
       display: block; padding: 10px 12px; border-radius: 8px; color: #b4b4be;
-      text-decoration: none; font-size: 13.5px; margin-bottom: 2px;
+      text-decoration: none; font-size: 13.5px; margin-bottom: 2px; cursor: pointer;
     }
     .nav a:hover { background: var(--sidebar-2); color: #fff; }
+    .nav a.active { background: var(--coral); color: #fff; }
     .sidebar .foot { padding: 14px 16px; border-top: 1px solid #2c2c34; }
     .btn-logout {
       width: 100%; background: transparent; color: #b4b4be;
@@ -95,16 +96,44 @@
     .main h1 { font-size: 20px; margin: 0 0 2px; letter-spacing: -0.3px; }
     .main .lead { color: var(--muted); margin: 0 0 22px; font-size: 13px; }
 
-    section.panel { margin-bottom: 34px; scroll-margin-top: 12px; }
-    section.panel h2 {
-      font-size: 15px; margin: 0 0 12px; font-weight: 700; letter-spacing: -0.2px;
+    section.panel { margin-bottom: 8px; }
+    section.panel > h2 {
+      font-size: 17px; margin: 0 0 4px; font-weight: 700; letter-spacing: -0.2px;
       display: flex; align-items: center; gap: 8px;
     }
+    section.panel > .desc { color: var(--muted); font-size: 12.5px; margin: 0 0 16px; }
 
     .card {
       background: var(--card); border: 1px solid var(--border);
       border-radius: 12px; padding: 16px;
     }
+
+    /* ---------- Filter bar ---------- */
+    .filter-bar {
+      display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
+    }
+    .filter-bar .fg { display: flex; flex-direction: column; gap: 4px; }
+    .filter-bar label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
+    .filter-bar input, .filter-bar select {
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 13px; font-family: inherit; outline: none; background: #fff; min-width: 130px;
+    }
+    .filter-bar input:focus, .filter-bar select:focus { border-color: var(--coral); }
+    .filter-bar .sev-pair { display: flex; gap: 6px; align-items: center; }
+    .filter-bar .sev-pair input { min-width: 60px; width: 66px; }
+    .filter-actions { display: flex; gap: 8px; margin-left: auto; }
+    .btn-apply {
+      background: var(--coral); color: #fff; border: none; border-radius: 8px;
+      padding: 9px 16px; font-weight: 600; font-size: 13px;
+    }
+    .btn-apply:hover { background: var(--coral-dim); }
+    .btn-ghost {
+      background: transparent; color: var(--muted); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 14px; font-size: 13px; font-weight: 600;
+    }
+    .btn-ghost:hover { border-color: var(--coral); color: var(--coral); }
 
     /* KPI */
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
@@ -114,13 +143,19 @@
     .kpi.accent .v { color: var(--coral); }
 
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } .sidebar { width: 64px; } .sidebar .logo, .nav a span.t { display: none; } }
+    @media (max-width: 900px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .sidebar { width: 64px; }
+      .sidebar .logo, .nav a span.t { display: none; }
+      .filter-actions { margin-left: 0; width: 100%; }
+    }
 
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
     th { color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .3px; }
     tbody tr:hover { background: #fafafa; }
     .table-wrap { overflow-x: auto; }
+    td.desc-cell { max-width: 320px; white-space: normal; }
 
     .badge {
       display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
@@ -130,9 +165,30 @@
     .badge.st-ACTIVE { background: #fdeaea; color: var(--coral); }
     .badge.st-RESOLVED { background: #e6f5ea; color: var(--good); }
     .badge.st-CANCELLED { background: #eee; color: var(--muted); }
+    .badge.type { background: #eef2ff; color: #4f46e5; }
+
+    /* ---------- Table toolbar + pager ---------- */
+    .table-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px; gap: 12px; flex-wrap: wrap;
+    }
+    .table-head .count { color: var(--muted); font-size: 12.5px; }
+    .btn-csv {
+      background: #fff; color: var(--text); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 12px; font-size: 12.5px; font-weight: 600;
+    }
+    .btn-csv:hover { border-color: var(--good); color: var(--good); }
+    .pager { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+    .pg-btn {
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      padding: 7px 12px; font-size: 13px; font-weight: 600; color: var(--text);
+    }
+    .pg-btn:hover:not(:disabled) { border-color: var(--coral); color: var(--coral); }
+    .pg-btn:disabled { opacity: .45; cursor: not-allowed; }
+    .pg-info { color: var(--muted); font-size: 12.5px; }
 
     .chart-box { position: relative; height: 260px; }
-    #map { height: 420px; border-radius: 10px; overflow: hidden; }
+    #map { height: 460px; border-radius: 10px; overflow: hidden; }
     .metrics-row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 14px; }
     .metric .v { font-size: 22px; font-weight: 700; }
     .metric .l { color: var(--muted); font-size: 12px; }
@@ -173,13 +229,13 @@
       <aside class="sidebar">
         <div class="logo">sakhi <span>OPS</span></div>
         <nav class="nav">
-          <a href="#summary"><span class="t">Overview</span></a>
-          <a href="#users"><span class="t">Users</span></a>
-          <a href="#incidents"><span class="t">Incidents</span></a>
-          <a href="#hotspots"><span class="t">Crime hotspots</span></a>
-          <a href="#sos"><span class="t">SOS response</span></a>
-          <a href="#contacts"><span class="t">Emergency contacts</span></a>
-          <a href="#health"><span class="t">App health</span></a>
+          <a data-view="summary"><span class="t">Overview</span></a>
+          <a data-view="users"><span class="t">Users</span></a>
+          <a data-view="incidents"><span class="t">Incidents</span></a>
+          <a data-view="hotspots"><span class="t">Crime hotspots</span></a>
+          <a data-view="sos"><span class="t">SOS response</span></a>
+          <a data-view="contacts"><span class="t">Emergency contacts</span></a>
+          <a data-view="health"><span class="t">App health</span></a>
         </nav>
         <div class="foot">
           <button class="btn-logout" id="logoutBtn">Log out</button>
@@ -187,43 +243,187 @@
       </aside>
 
       <main class="main">
-        <h1>Operations dashboard</h1>
         <p class="lead" id="whoami"></p>
 
-        <section class="panel" id="summary">
-          <h2>Overview</h2>
+        <!-- OVERVIEW -->
+        <section class="panel" data-view="summary">
+          <h1>Overview</h1>
+          <p class="desc">Key metrics across the platform. Pick a window for the "recent" counts.</p>
+          <div class="filter-bar">
+            <div class="fg">
+              <label for="sumWindow">Window</label>
+              <select id="sumWindow">
+                <option value="7d">Last 7 days</option>
+                <option value="30d">Last 30 days</option>
+                <option value="90d">Last 90 days</option>
+                <option value="custom">Custom range</option>
+              </select>
+            </div>
+            <div class="fg sum-custom" style="display:none;">
+              <label for="sumFrom">From</label>
+              <input id="sumFrom" type="date" />
+            </div>
+            <div class="fg sum-custom" style="display:none;">
+              <label for="sumTo">To</label>
+              <input id="sumTo" type="date" />
+            </div>
+            <div class="filter-actions">
+              <button class="btn-apply" id="sumApply">Apply</button>
+            </div>
+          </div>
           <div class="kpi-grid" id="kpiGrid"></div>
         </section>
 
-        <section class="panel" id="users">
-          <h2>User management</h2>
-          <div class="card table-wrap">
-            <table>
-              <thead>
-                <tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th><th>Reports</th><th>SOS</th><th>Guardians</th></tr>
-              </thead>
-              <tbody id="usersBody"></tbody>
-            </table>
+        <!-- USERS -->
+        <section class="panel" data-view="users">
+          <h1>User management</h1>
+          <p class="desc">Registered users with their activity counts. Filter by name/email/phone and join date.</p>
+          <div class="filter-bar">
+            <div class="fg">
+              <label for="uSearch">Search</label>
+              <input id="uSearch" type="text" placeholder="name, email or phone" />
+            </div>
+            <div class="fg">
+              <label for="uFrom">Joined from</label>
+              <input id="uFrom" type="date" />
+            </div>
+            <div class="fg">
+              <label for="uTo">Joined to</label>
+              <input id="uTo" type="date" />
+            </div>
+            <div class="filter-actions">
+              <button class="btn-apply" data-apply="users">Apply</button>
+              <button class="btn-ghost" data-reset="users">Reset</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="table-head">
+              <span class="count" id="usersCount"></span>
+              <button class="btn-csv" data-csv="users">⬇ Download CSV</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th><th>Reports</th><th>SOS</th><th>Guardians</th></tr>
+                </thead>
+                <tbody id="usersBody"></tbody>
+              </table>
+            </div>
+            <div class="pager" id="usersPager"></div>
           </div>
         </section>
 
-        <section class="panel" id="incidents">
-          <h2>Incident analytics</h2>
+        <!-- INCIDENTS -->
+        <section class="panel" data-view="incidents">
+          <h1>Incident analytics</h1>
+          <p class="desc">User-reported incidents. Filter by type, location, time and free text — charts and table update together.</p>
+          <div class="filter-bar">
+            <div class="fg">
+              <label for="iType">Type</label>
+              <select id="iType"><option value="">All types</option></select>
+            </div>
+            <div class="fg">
+              <label for="iArea">Area</label>
+              <select id="iArea"><option value="">All areas</option></select>
+            </div>
+            <div class="fg">
+              <label for="iSearch">Search</label>
+              <input id="iSearch" type="text" placeholder="area or description" />
+            </div>
+            <div class="fg">
+              <label for="iFrom">From</label>
+              <input id="iFrom" type="date" />
+            </div>
+            <div class="fg">
+              <label for="iTo">To</label>
+              <input id="iTo" type="date" />
+            </div>
+            <div class="fg">
+              <label for="iSort">Sort</label>
+              <select id="iSort">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+              </select>
+            </div>
+            <div class="filter-actions">
+              <button class="btn-apply" data-apply="incidents">Apply</button>
+              <button class="btn-ghost" data-reset="incidents">Reset</button>
+            </div>
+          </div>
           <div class="grid-2">
             <div class="card"><div class="chart-box"><canvas id="incByType"></canvas></div></div>
             <div class="card"><div class="chart-box"><canvas id="incByDay"></canvas></div></div>
           </div>
-          <div class="card table-wrap" style="margin-top:16px;">
-            <table>
-              <thead><tr><th>Type</th><th>Area</th><th>When</th></tr></thead>
-              <tbody id="incRecentBody"></tbody>
-            </table>
+          <div class="card" style="margin-top:16px;">
+            <div class="table-head">
+              <span class="count" id="incCount"></span>
+              <button class="btn-csv" data-csv="incidents">⬇ Download CSV</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Type</th><th>Area</th><th>Description</th><th>Reporter</th><th>When</th></tr></thead>
+                <tbody id="incBody"></tbody>
+              </table>
+            </div>
+            <div class="pager" id="incPager"></div>
           </div>
         </section>
 
-        <section class="panel" id="hotspots">
-          <h2>Crime hotspots</h2>
+        <!-- HOTSPOTS -->
+        <section class="panel" data-view="hotspots">
+          <h1>Crime hotspots</h1>
+          <p class="desc">Crime-news records and user reports on the map. Filter crime by type, locality, zone, severity, time of day and date.</p>
+          <div class="filter-bar">
+            <div class="fg">
+              <label for="cType">Crime type</label>
+              <select id="cType"><option value="">All types</option></select>
+            </div>
+            <div class="fg">
+              <label for="cLocality">Locality</label>
+              <select id="cLocality"><option value="">All localities</option></select>
+            </div>
+            <div class="fg">
+              <label for="cZone">Zone</label>
+              <select id="cZone"><option value="">All zones</option></select>
+            </div>
+            <div class="fg">
+              <label for="cComm">Commissionerate</label>
+              <select id="cComm"><option value="">All</option></select>
+            </div>
+            <div class="fg">
+              <label for="cTod">Time of day</label>
+              <select id="cTod">
+                <option value="">Any</option>
+                <option value="day">Day</option>
+                <option value="night">Night</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Severity</label>
+              <div class="sev-pair">
+                <input id="cSevMin" type="number" min="1" max="5" placeholder="min" />
+                <span class="dim">–</span>
+                <input id="cSevMax" type="number" min="1" max="5" placeholder="max" />
+              </div>
+            </div>
+            <div class="fg">
+              <label for="cFrom">From</label>
+              <input id="cFrom" type="date" />
+            </div>
+            <div class="fg">
+              <label for="cTo">To</label>
+              <input id="cTo" type="date" />
+            </div>
+            <div class="filter-actions">
+              <button class="btn-apply" data-apply="hotspots">Apply</button>
+              <button class="btn-ghost" data-reset="hotspots">Reset</button>
+            </div>
+          </div>
           <div class="card">
+            <div class="table-head">
+              <span class="count" id="hotCount"></span>
+            </div>
             <div id="map"></div>
             <div class="legend">
               <span class="sev1">Sev 1</span><span class="sev2">Sev 2</span>
@@ -233,8 +433,33 @@
           </div>
         </section>
 
-        <section class="panel" id="sos">
-          <h2>SOS response monitoring</h2>
+        <!-- SOS -->
+        <section class="panel" data-view="sos">
+          <h1>SOS response monitoring</h1>
+          <p class="desc">SOS events with response-time stats. Filter by status and time.</p>
+          <div class="filter-bar">
+            <div class="fg">
+              <label for="sStatus">Status</label>
+              <select id="sStatus">
+                <option value="">All statuses</option>
+                <option value="ACTIVE">Active</option>
+                <option value="RESOLVED">Resolved</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label for="sFrom">From</label>
+              <input id="sFrom" type="date" />
+            </div>
+            <div class="fg">
+              <label for="sTo">To</label>
+              <input id="sTo" type="date" />
+            </div>
+            <div class="filter-actions">
+              <button class="btn-apply" data-apply="sos">Apply</button>
+              <button class="btn-ghost" data-reset="sos">Reset</button>
+            </div>
+          </div>
           <div class="grid-2">
             <div class="card"><div class="chart-box"><canvas id="sosDoughnut"></canvas></div></div>
             <div class="card">
@@ -242,18 +467,49 @@
                 <div class="metric"><div class="v" id="sosAvg">—</div><div class="l">Avg response</div></div>
                 <div class="metric"><div class="v" id="sosMedian">—</div><div class="l">Median response</div></div>
               </div>
+              <div class="table-head">
+                <span class="count" id="sosCount"></span>
+                <button class="btn-csv" data-csv="sos">⬇ Download CSV</button>
+              </div>
               <div class="table-wrap">
                 <table>
-                  <thead><tr><th>Status</th><th>Started</th><th>Resolved</th><th>Response</th></tr></thead>
+                  <thead><tr><th>Status</th><th>User</th><th>Started</th><th>Resolved</th><th>Response</th></tr></thead>
                   <tbody id="sosBody"></tbody>
                 </table>
               </div>
+              <div class="pager" id="sosPager"></div>
             </div>
           </div>
         </section>
 
-        <section class="panel" id="contacts">
-          <h2>Emergency-contact statistics</h2>
+        <!-- CONTACTS -->
+        <section class="panel" data-view="contacts">
+          <h1>Emergency-contact statistics</h1>
+          <p class="desc">Guardian links and nearby-help places. Filter guardian aggregates by status and watch mode.</p>
+          <div class="filter-bar">
+            <div class="fg">
+              <label for="gStatus">Guardian status</label>
+              <select id="gStatus">
+                <option value="">All statuses</option>
+                <option value="PENDING">Pending</option>
+                <option value="ACTIVE">Active</option>
+                <option value="SOS_ONLY">SOS only</option>
+                <option value="DECLINED">Declined</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label for="gWatch">Watch mode</label>
+              <select id="gWatch">
+                <option value="">All modes</option>
+                <option value="ACTIVE">Active</option>
+                <option value="SOS_ONLY">SOS only</option>
+              </select>
+            </div>
+            <div class="filter-actions">
+              <button class="btn-apply" data-apply="contacts">Apply</button>
+              <button class="btn-ghost" data-reset="contacts">Reset</button>
+            </div>
+          </div>
           <div class="grid-2">
             <div class="card"><div class="chart-box"><canvas id="guardianStatus"></canvas></div></div>
             <div class="card"><div class="chart-box"><canvas id="guardianWatch"></canvas></div></div>
@@ -267,8 +523,10 @@
           </div>
         </section>
 
-        <section class="panel" id="health">
-          <h2>Application health <span id="healthPulse" class="dim" style="font-size:11px;font-weight:400;"></span></h2>
+        <!-- HEALTH -->
+        <section class="panel" data-view="health">
+          <h1>Application health <span id="healthPulse" class="dim" style="font-size:11px;font-weight:400;"></span></h1>
+          <p class="desc">Live server status, refreshed every 15 seconds while this view is open.</p>
           <div class="card">
             <div class="health-grid" id="healthGrid"></div>
           </div>
@@ -282,6 +540,7 @@
   <script>
     'use strict';
     const TOKEN_KEY = 'sakhi.admin.token';
+    const VIEWS = ['summary', 'users', 'incidents', 'hotspots', 'sos', 'contacts', 'health'];
 
     // Escape all user-supplied strings before DOM insertion.
     function esc(s) {
@@ -324,6 +583,18 @@
       if (m) return m + 'm ' + s + 's';
       return s + 's';
     }
+    // Build a query string from an object, skipping empty/nullish values.
+    function qs(obj) {
+      const p = new URLSearchParams();
+      for (const k in obj) {
+        const v = obj[k];
+        if (v !== '' && v != null) p.set(k, v);
+      }
+      const s = p.toString();
+      return s ? '?' + s : '';
+    }
+    function val(id) { const e = document.getElementById(id); return e ? e.value.trim() : ''; }
+    function setVal(id, v) { const e = document.getElementById(id); if (e) e.value = v; }
 
     // ---- Views ----
     const loginView = document.getElementById('login');
@@ -333,7 +604,7 @@
       loginView.style.display = 'flex';
       document.getElementById('loginErr').textContent = msg || '';
     }
-    function showApp() {
+    function showAppShell() {
       loginView.style.display = 'none';
       appView.style.display = 'block';
     }
@@ -353,6 +624,30 @@
       return res.json();
     }
 
+    // CSV export: the admin guard needs the Authorization header, so a plain
+    // <a href> can't be used — fetch as a blob and trigger a download.
+    async function downloadCsv(path, filename) {
+      const res = await fetch('/api/admin' + path, {
+        headers: { Authorization: 'Bearer ' + getToken() },
+      });
+      if (res.status === 401 || res.status === 403) {
+        clearToken();
+        stopHealthTimer();
+        showLogin('Session expired or not an admin. Please sign in again.');
+        return;
+      }
+      if (!res.ok) { console.error('CSV export failed:', res.status); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
     // ---- Login flow ----
     document.getElementById('loginForm').addEventListener('submit', async function (e) {
       e.preventDefault();
@@ -370,7 +665,6 @@
         const data = await res.json();
         if (!data.token) { errEl.textContent = 'Login failed.'; return; }
         setToken(data.token);
-        showApp();
         boot(data.user);
       } catch (err) {
         errEl.textContent = 'Network error. Is the server running?';
@@ -393,16 +687,65 @@
     const CORAL = '#E5484D';
     const PALETTE = ['#E5484D', '#3b82f6', '#2f9e44', '#e8a800', '#8b5cf6', '#f26b21', '#06b6d4', '#94c11f'];
 
+    // ---- Per-view filter state ----
+    const state = {
+      summary:   { window: '7d', from: '', to: '' },
+      users:     { search: '', from: '', to: '', page: 1, pageSize: 25 },
+      incidents: { type: '', area: '', search: '', from: '', to: '', sort: 'newest', page: 1, pageSize: 25 },
+      hotspots:  { crimeType: '', locality: '', zone: '', commissionerate: '', severityMin: '', severityMax: '', timeOfDay: '', from: '', to: '' },
+      sos:       { status: '', from: '', to: '', page: 1, pageSize: 25 },
+      contacts:  { status: '', watchMode: '' },
+    };
+    let filtersLoaded = { incidents: false, crime: false };
+
+    // ---- Pager ----
+    function renderPager(container, page, pageSize, total, onPage) {
+      container.textContent = '';
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      const prev = el('button', '‹ Prev', 'pg-btn');
+      prev.disabled = page <= 1;
+      prev.addEventListener('click', function () { onPage(page - 1); });
+      const next = el('button', 'Next ›', 'pg-btn');
+      next.disabled = page >= totalPages;
+      next.addEventListener('click', function () { onPage(page + 1); });
+      const info = el('span', 'Page ' + page + ' of ' + totalPages, 'pg-info');
+      container.appendChild(prev);
+      container.appendChild(info);
+      container.appendChild(next);
+    }
+
+    function fillSelect(id, values, keepFirst) {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      const current = sel.value;
+      // Keep the leading "All ..." option (first child), drop the rest.
+      while (sel.children.length > (keepFirst ? 1 : 0)) sel.removeChild(sel.lastChild);
+      for (const v of values) {
+        const o = document.createElement('option');
+        o.value = v; o.textContent = v;
+        sel.appendChild(o);
+      }
+      sel.value = current;
+    }
+
     // ---- Panels ----
     async function loadSummary() {
-      const s = await adminFetch('/summary');
+      const st = state.summary;
+      let from = '', to = '';
+      if (st.window === 'custom') { from = st.from; to = st.to; }
+      else {
+        const days = { '7d': 7, '30d': 30, '90d': 90 }[st.window] || 7;
+        const d = new Date(Date.now() - days * 86400000);
+        from = d.toISOString().slice(0, 10);
+      }
+      const s = await adminFetch('/summary' + qs({ from: from, to: to }));
       const grid = document.getElementById('kpiGrid');
       grid.textContent = '';
       const items = [
         ['Total users', s.totalUsers, false],
-        ['New (7d)', s.newUsers7d, false],
+        ['New (window)', s.newUsers7d, false],
         ['Incidents', s.totalIncidents, false],
-        ['Incidents (7d)', s.incidents7d, false],
+        ['Incidents (window)', s.incidents7d, false],
         ['Active SOS', s.activeSos, true],
         ['Total SOS', s.totalSos, false],
         ['Guardians active', s.guardiansActive, false],
@@ -411,19 +754,21 @@
         ['Nearby places', s.places, false],
         ['Crime records', s.crimeIncidents, false],
       ];
-      for (const [label, value, accent] of items) {
-        const card = el('div', null, 'kpi' + (accent ? ' accent' : ''));
-        card.appendChild(el('div', value ?? 0, 'v'));
-        card.appendChild(el('div', label, 'l'));
+      for (const item of items) {
+        const card = el('div', null, 'kpi' + (item[2] ? ' accent' : ''));
+        card.appendChild(el('div', item[1] ?? 0, 'v'));
+        card.appendChild(el('div', item[0], 'l'));
         grid.appendChild(card);
       }
     }
 
     async function loadUsers() {
-      const users = await adminFetch('/users?limit=100');
+      const st = state.users;
+      const query = qs({ search: st.search, from: st.from, to: st.to, page: st.page, pageSize: st.pageSize });
+      const res = await adminFetch('/users' + query);
       const body = document.getElementById('usersBody');
       body.textContent = '';
-      for (const u of users) {
+      for (const u of res.rows) {
         const tr = document.createElement('tr');
         tr.appendChild(el('td', u.name));
         tr.appendChild(el('td', u.email));
@@ -435,24 +780,38 @@
         tr.appendChild(el('td', c.guardianLinks ?? 0));
         body.appendChild(tr);
       }
-      if (!users.length) {
+      if (!res.rows.length) {
         const tr = document.createElement('tr');
-        const td = el('td', 'No users yet.', 'dim');
+        const td = el('td', 'No users match these filters.', 'dim');
         td.colSpan = 7;
         tr.appendChild(td);
         body.appendChild(tr);
       }
+      document.getElementById('usersCount').textContent = res.total + ' user' + (res.total === 1 ? '' : 's');
+      renderPager(document.getElementById('usersPager'), res.page, res.pageSize, res.total, function (p) {
+        state.users.page = p; loadUsers().catch(swallow);
+      });
     }
 
     async function loadIncidents() {
-      const a = await adminFetch('/incidents/analytics');
+      const st = state.incidents;
+      if (!filtersLoaded.incidents) {
+        try {
+          const f = await adminFetch('/incidents/filters');
+          fillSelect('iType', f.types, true);
+          fillSelect('iArea', f.areas, true);
+          filtersLoaded.incidents = true;
+        } catch (e) { if (e && e.message === 'unauthorized') throw e; }
+      }
+      const filterQ = { type: st.type, area: st.area, search: st.search, from: st.from, to: st.to, sort: st.sort };
+      const a = await adminFetch('/incidents/analytics' + qs(filterQ));
       makeChart('incByType', {
         type: 'bar',
         data: {
           labels: a.byType.map(function (t) { return t.type; }),
           datasets: [{ label: 'Reports', data: a.byType.map(function (t) { return t.count; }), backgroundColor: CORAL }],
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Reports by type' } } },
       });
       makeChart('incByDay', {
         type: 'line',
@@ -461,18 +820,37 @@
           datasets: [{ label: 'Reports/day', data: a.byDay.map(function (d) { return d.count; }),
             borderColor: CORAL, backgroundColor: 'rgba(229,72,77,.15)', fill: true, tension: .3, pointRadius: 0 }],
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Reports per day' } },
           scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
       });
-      const body = document.getElementById('incRecentBody');
+
+      const listQ = Object.assign({}, filterQ, { page: st.page, pageSize: st.pageSize });
+      const res = await adminFetch('/incidents' + qs(listQ));
+      const body = document.getElementById('incBody');
       body.textContent = '';
-      for (const r of a.recent) {
+      for (const r of res.rows) {
         const tr = document.createElement('tr');
-        tr.appendChild(el('td', r.type));
+        const typeTd = el('td');
+        typeTd.appendChild(el('span', r.type, 'badge type'));
+        tr.appendChild(typeTd);
         tr.appendChild(el('td', r.area || '—'));
+        const dtd = el('td', r.description || '—', 'desc-cell');
+        tr.appendChild(dtd);
+        tr.appendChild(el('td', r.userName || '—'));
         tr.appendChild(el('td', fmtDate(r.createdAt)));
         body.appendChild(tr);
       }
+      if (!res.rows.length) {
+        const tr = document.createElement('tr');
+        const td = el('td', 'No incidents match these filters.', 'dim');
+        td.colSpan = 5;
+        tr.appendChild(td);
+        body.appendChild(tr);
+      }
+      document.getElementById('incCount').textContent = res.total + ' incident' + (res.total === 1 ? '' : 's');
+      renderPager(document.getElementById('incPager'), res.page, res.pageSize, res.total, function (p) {
+        state.incidents.page = p; loadIncidents().catch(swallow);
+      });
     }
 
     let map = null;
@@ -481,7 +859,21 @@
       return ['#94c11f','#94c11f','#e8a800','#f26b21','#E5484D'][Math.max(1, Math.min(5, sev || 3)) - 1];
     }
     async function loadHotspots() {
-      const h = await adminFetch('/hotspots');
+      const st = state.hotspots;
+      if (!filtersLoaded.crime) {
+        try {
+          const f = await adminFetch('/crime/filters');
+          fillSelect('cType', f.crimeTypes, true);
+          fillSelect('cLocality', f.localities, true);
+          fillSelect('cZone', f.zones, true);
+          fillSelect('cComm', f.commissionerates, true);
+          filtersLoaded.crime = true;
+        } catch (e) { if (e && e.message === 'unauthorized') throw e; }
+      }
+      const h = await adminFetch('/hotspots' + qs({
+        crimeType: st.crimeType, locality: st.locality, zone: st.zone, commissionerate: st.commissionerate,
+        timeOfDay: st.timeOfDay, severityMin: st.severityMin, severityMax: st.severityMax, from: st.from, to: st.to,
+      }));
       if (!map) {
         map = L.map('map').setView([17.40, 78.48], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -496,7 +888,7 @@
           radius: 5 + (c.severity || 1), color: sevColor(c.severity),
           fillColor: sevColor(c.severity), fillOpacity: .6, weight: 1,
         });
-        m.bindPopup('<b>' + esc(c.crimeType) + '</b><br>' + esc(c.locality) + '<br>Severity ' + esc(c.severity));
+        m.bindPopup('<b>' + esc(c.crimeType) + '</b><br>' + esc(c.locality) + '<br>Severity ' + esc(c.severity) + ' · ' + esc(c.timeOfDay));
         hotspotLayer.addLayer(m);
       }
       for (const r of h.reports) {
@@ -507,39 +899,57 @@
         m.bindPopup('<b>Report: ' + esc(r.type) + '</b><br>' + esc(r.area || '') + '<br>' + esc(fmtDate(r.createdAt)));
         hotspotLayer.addLayer(m);
       }
+      document.getElementById('hotCount').textContent =
+        h.crime.length + ' crime record' + (h.crime.length === 1 ? '' : 's') + ' · ' +
+        h.reports.length + ' user report' + (h.reports.length === 1 ? '' : 's');
       setTimeout(function () { map.invalidateSize(); }, 100);
     }
 
     async function loadSos() {
-      const s = await adminFetch('/sos');
+      const st = state.sos;
+      const filterQ = { status: st.status, from: st.from, to: st.to };
+      const res = await adminFetch('/sos' + qs(Object.assign({}, filterQ, { page: st.page, pageSize: st.pageSize })));
       const statusColors = { ACTIVE: CORAL, RESOLVED: '#2f9e44', CANCELLED: '#9aa0aa' };
       makeChart('sosDoughnut', {
         type: 'doughnut',
         data: {
-          labels: s.byStatus.map(function (x) { return x.status; }),
-          datasets: [{ data: s.byStatus.map(function (x) { return x.count; }),
-            backgroundColor: s.byStatus.map(function (x) { return statusColors[x.status] || '#ccc'; }) }],
+          labels: res.byStatus.map(function (x) { return x.status; }),
+          datasets: [{ data: res.byStatus.map(function (x) { return x.count; }),
+            backgroundColor: res.byStatus.map(function (x) { return statusColors[x.status] || '#ccc'; }) }],
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'SOS by status' } } },
       });
-      document.getElementById('sosAvg').textContent = fmtSec(s.avgResponseSec);
-      document.getElementById('sosMedian').textContent = fmtSec(s.medianResponseSec);
+      document.getElementById('sosAvg').textContent = fmtSec(res.avgResponseSec);
+      document.getElementById('sosMedian').textContent = fmtSec(res.medianResponseSec);
       const body = document.getElementById('sosBody');
       body.textContent = '';
-      for (const e of s.recent) {
+      for (const e of res.rows) {
         const tr = document.createElement('tr');
-        const st = el('td');
-        st.appendChild(el('span', e.status, 'badge st-' + esc(e.status)));
-        tr.appendChild(st);
+        const stTd = el('td');
+        stTd.appendChild(el('span', e.status, 'badge st-' + esc(e.status)));
+        tr.appendChild(stTd);
+        tr.appendChild(el('td', e.userName || '—'));
         tr.appendChild(el('td', fmtDate(e.startedAt)));
         tr.appendChild(el('td', fmtDate(e.resolvedAt)));
         tr.appendChild(el('td', fmtSec(e.responseSec)));
         body.appendChild(tr);
       }
+      if (!res.rows.length) {
+        const tr = document.createElement('tr');
+        const td = el('td', 'No SOS events match these filters.', 'dim');
+        td.colSpan = 5;
+        tr.appendChild(td);
+        body.appendChild(tr);
+      }
+      document.getElementById('sosCount').textContent = res.total + ' event' + (res.total === 1 ? '' : 's');
+      renderPager(document.getElementById('sosPager'), res.page, res.pageSize, res.total, function (p) {
+        state.sos.page = p; loadSos().catch(swallow);
+      });
     }
 
     async function loadContacts() {
-      const c = await adminFetch('/contacts');
+      const st = state.contacts;
+      const c = await adminFetch('/contacts' + qs({ status: st.status, watchMode: st.watchMode }));
       makeChart('guardianStatus', {
         type: 'bar',
         data: {
@@ -605,33 +1015,130 @@
       document.getElementById('healthPulse').textContent = 'updated ' + fmtDate(h.timestamp);
     }
 
-    // ---- Health auto-refresh ----
+    const loaders = {
+      summary: loadSummary,
+      users: loadUsers,
+      incidents: loadIncidents,
+      hotspots: loadHotspots,
+      sos: loadSos,
+      contacts: loadContacts,
+      health: loadHealth,
+    };
+
+    function swallow(e) { if (e && e.message === 'unauthorized') return; console.error(e); }
+
+    // ---- Health auto-refresh (only while the health view is visible) ----
     let healthTimer = null;
     function startHealthTimer() {
       stopHealthTimer();
-      healthTimer = setInterval(function () {
-        loadHealth().catch(function () {});
-      }, 15000);
+      healthTimer = setInterval(function () { loadHealth().catch(function () {}); }, 15000);
     }
     function stopHealthTimer() {
       if (healthTimer) { clearInterval(healthTimer); healthTimer = null; }
     }
 
+    // ---- Router ----
+    let currentView = null;
+    async function showView(name) {
+      if (VIEWS.indexOf(name) === -1) name = 'summary';
+      currentView = name;
+      const panels = document.querySelectorAll('section.panel');
+      for (const p of panels) p.style.display = p.dataset.view === name ? 'block' : 'none';
+      const links = document.querySelectorAll('.nav a');
+      for (const a of links) {
+        if (a.dataset.view === name) a.classList.add('active');
+        else a.classList.remove('active');
+      }
+      if (name === 'health') startHealthTimer(); else stopHealthTimer();
+      try { await loaders[name](); } catch (e) { swallow(e); }
+    }
+
+    // Sidebar navigation -> hash -> showView
+    document.querySelectorAll('.nav a').forEach(function (a) {
+      a.addEventListener('click', function () { location.hash = a.dataset.view; });
+    });
+    window.addEventListener('hashchange', function () {
+      if (getToken()) showView((location.hash || '#summary').slice(1));
+    });
+
+    // ---- Filter apply / reset wiring ----
+    function readFiltersInto(view) {
+      const st = state[view];
+      if (view === 'users') { st.search = val('uSearch'); st.from = val('uFrom'); st.to = val('uTo'); st.page = 1; }
+      else if (view === 'incidents') {
+        st.type = val('iType'); st.area = val('iArea'); st.search = val('iSearch');
+        st.from = val('iFrom'); st.to = val('iTo'); st.sort = val('iSort') || 'newest'; st.page = 1;
+      }
+      else if (view === 'hotspots') {
+        st.crimeType = val('cType'); st.locality = val('cLocality'); st.zone = val('cZone');
+        st.commissionerate = val('cComm'); st.timeOfDay = val('cTod');
+        st.severityMin = val('cSevMin'); st.severityMax = val('cSevMax');
+        st.from = val('cFrom'); st.to = val('cTo');
+      }
+      else if (view === 'sos') { st.status = val('sStatus'); st.from = val('sFrom'); st.to = val('sTo'); st.page = 1; }
+      else if (view === 'contacts') { st.status = val('gStatus'); st.watchMode = val('gWatch'); }
+    }
+    const RESET_FIELDS = {
+      users: ['uSearch', 'uFrom', 'uTo'],
+      incidents: ['iType', 'iArea', 'iSearch', 'iFrom', 'iTo'],
+      hotspots: ['cType', 'cLocality', 'cZone', 'cComm', 'cTod', 'cSevMin', 'cSevMax', 'cFrom', 'cTo'],
+      sos: ['sStatus', 'sFrom', 'sTo'],
+      contacts: ['gStatus', 'gWatch'],
+    };
+    const DEFAULT_STATE = JSON.parse(JSON.stringify(state));
+
+    document.querySelectorAll('[data-apply]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const view = btn.dataset.apply;
+        readFiltersInto(view);
+        loaders[view]().catch(swallow);
+      });
+    });
+    document.querySelectorAll('[data-reset]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const view = btn.dataset.reset;
+        (RESET_FIELDS[view] || []).forEach(function (id) { setVal(id, id === 'iSort' ? 'newest' : ''); });
+        state[view] = JSON.parse(JSON.stringify(DEFAULT_STATE[view]));
+        loaders[view]().catch(swallow);
+      });
+    });
+    document.querySelectorAll('[data-csv]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const view = btn.dataset.csv;
+        const st = state[view];
+        let query = '';
+        if (view === 'users') query = qs({ search: st.search, from: st.from, to: st.to, format: 'csv' });
+        else if (view === 'incidents') query = qs({ type: st.type, area: st.area, search: st.search, from: st.from, to: st.to, sort: st.sort, format: 'csv' });
+        else if (view === 'sos') query = qs({ status: st.status, from: st.from, to: st.to, format: 'csv' });
+        const stamp = new Date().toISOString().slice(0, 10);
+        downloadCsv('/' + view + query, view + '-' + stamp + '.csv');
+      });
+    });
+
+    // Overview window selector: toggle the custom date inputs.
+    document.getElementById('sumWindow').addEventListener('change', function () {
+      const custom = this.value === 'custom';
+      document.querySelectorAll('.sum-custom').forEach(function (n) { n.style.display = custom ? 'flex' : 'none'; });
+    });
+    document.getElementById('sumApply').addEventListener('click', function () {
+      state.summary.window = val('sumWindow');
+      state.summary.from = val('sumFrom');
+      state.summary.to = val('sumTo');
+      loadSummary().catch(swallow);
+    });
+
+    // ---- Startup ----
     async function boot(user) {
+      showAppShell();
       if (user) {
         document.getElementById('whoami').textContent =
           'Signed in as ' + (user.name || user.email || '');
       }
-      const tasks = [loadSummary, loadUsers, loadIncidents, loadHotspots, loadSos, loadContacts, loadHealth];
-      for (const t of tasks) {
-        try { await t(); } catch (e) { if (e && e.message === 'unauthorized') return; }
-      }
-      startHealthTimer();
+      const initial = (location.hash || '#summary').slice(1);
+      await showView(VIEWS.indexOf(initial) === -1 ? 'summary' : initial);
     }
 
-    // ---- Startup ----
     if (getToken()) {
-      showApp();
       boot(null);
     } else {
       showLogin('');

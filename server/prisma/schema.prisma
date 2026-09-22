@@ -81,6 +81,7 @@ model SosEvent {
   evidence Evidence[]
 
   @@index([userId, status])
+  @@index([startedAt])
 }
 
 model Incident {
@@ -97,6 +98,8 @@ model Incident {
   evidence Evidence[]
 
   @@index([userId])
+  @@index([createdAt])
+  @@index([type])
 }
 
 model Evidence {
@@ -141,6 +144,8 @@ model CrimeIncident {
   createdAt       DateTime  @default(now())
 
   @@index([lat, lon])
+  @@index([crimeType])
+  @@index([severity])
 }
 
 // Static directory of nearby-help places (police stations, hospitals, women's

@@ -51,6 +51,12 @@ services:
         condition: service_healthy
     ports:
       - "4000:4000"
+    # Load secrets that aren't hard-coded here — notably GEMINI_API_KEY for the
+    # Ask Sakhi assistant. Keys also present in `environment:` below (DATABASE_URL,
+    # PORT, etc.) are overridden there with container-correct values, so the
+    # in-cluster hostnames win over any localhost values in server/.env.
+    env_file:
+      - ./server/.env
     environment:
       PORT: 4000
       DATABASE_URL: "postgresql://sakhi:sakhi@db:5432/sakhi?schema=public"
