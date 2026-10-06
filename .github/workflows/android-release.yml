@@ -34,8 +34,11 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      # package-lock.json is written by npm 11; the npm 10 bundled with Node 22 rejects it.
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm install -g npm@11
+          npm ci
 
       # The committed .env points at localhost, which is useless on a real device.
       # Set the EXPO_PUBLIC_API_URL repository variable to bake in the deployed backend.
